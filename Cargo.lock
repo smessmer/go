@@ -50,6 +50,13 @@ dependencies = [
 ]
 
 [[package]]
+name = "go-tui"
+version = "0.1.1"
+dependencies = [
+ "go-game",
+]
+
+[[package]]
 name = "proc-macro2"
 version = "1.0.94"
 source = "registry+https://github.com/rust-lang/crates.io-index"

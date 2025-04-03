@@ -1,5 +1,5 @@
 [workspace]
-members = ["game"]
+members = ["game", "tui"]
 resolver = "3"
 
 [workspace.package]

@@ -1,0 +1,8 @@
+[package]
+name = "go-tui"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+go-game = { path = "../game" }
