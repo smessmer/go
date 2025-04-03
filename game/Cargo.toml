@@ -1,0 +1,9 @@
+[package]
+name = "go-game"
+authors.workspace = true
+edition.workspace = true
+version.workspace = true
+
+[dependencies]
+bitvec.workspace = true
+derive_more = {workspace = true, features = ["error", "display"]}
