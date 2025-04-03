@@ -9,8 +9,8 @@ where
     [(); bitvec::mem::elts::<usize>(2 * N * N)]:,
 {
     /// (x=0, y=0) origin is the top-left corner of the board
-    /// cells[4 * y + x] is true if the cell at (x, y) is occupied.
-    /// cells[4 * y + x + 1] can only be set if (x, y) is occupied and is true if the cell at (x, y) is black, false for white.
+    /// cells[2 * (N*y+ )] is true if the cell at (x, y) is occupied.
+    /// cells[2 * (N*y+x) + 1] can only be set if (x, y) is occupied and is true if the cell at (x, y) is black, false for white.
     cells: BitArr!(for 2*N*N),
 }
 
@@ -74,7 +74,7 @@ where
     #[inline]
     const fn index(x: usize, y: usize) -> usize {
         assert!(x < N && y < N, "Coordinates out of bounds");
-        4 * y + x
+        2 * N * y + 2 * x
     }
 
     #[cfg(test)]
@@ -150,5 +150,19 @@ mod tests {
 
         board.set(12, 8, Some(Player::White));
         assert_eq!(board[(12, 8)], Some(Player::White));
+
+        for y in 0..13 {
+            for x in 0..13 {
+                if (x, y) != (0, 0) && (x, y) != (10, 10) && (x, y) != (12, 8) {
+                    assert_eq!(
+                        board[(x, y)],
+                        None,
+                        "Cell ({}, {}) should still be empty",
+                        x,
+                        y
+                    );
+                }
+            }
+        }
     }
 }

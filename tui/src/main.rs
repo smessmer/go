@@ -16,7 +16,7 @@ fn main() -> Result<()> {
 fn run(mut terminal: DefaultTerminal) -> Result<()> {
     let mut app = App::new();
     while !app.should_exit() {
-        terminal.draw(|frame| app.render(frame))?;
+        terminal.draw(|frame| app.draw(frame))?;
         app.on_event(event::read()?);
     }
 
