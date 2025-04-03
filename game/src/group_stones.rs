@@ -30,12 +30,14 @@ where
                 }
                 (true, false) => {
                     // Connected to the left stone, use its group
+                    // TODO Would it be faster to just add it as a child below left_pos instead of looking up left_group?
                     let left_pos = Pos::from_pointed_to(x - 1, y);
                     let left_group = result.find_group_root(left_pos);
                     left_group
                 }
                 (false, true) => {
                     // Connected to the top stone, use its group
+                    // TODO Would it be faster to just add it as a child below top_pos instead of looking up top_group?
                     let top_pos = Pos::from_pointed_to(x, y - 1);
                     let top_group = result.find_group_root(top_pos);
                     top_group
