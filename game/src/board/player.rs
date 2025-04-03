@@ -1,4 +1,6 @@
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
+use enum_map::Enum;
+
+#[derive(Clone, Copy, Debug, PartialEq, Eq, Enum)]
 pub enum Player {
     Black,
     White,

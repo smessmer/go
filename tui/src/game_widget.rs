@@ -12,6 +12,7 @@ use crate::board_widget::BoardWidget;
 pub struct GameWidget<const BOARD_SIZE: usize>
 where
     [(); bitvec::mem::elts::<usize>(2 * BOARD_SIZE * BOARD_SIZE)]:,
+    [(); BOARD_SIZE * BOARD_SIZE]:,
 {
     game: Game<BOARD_SIZE>,
     current_pos: (usize, usize),
@@ -20,6 +21,7 @@ where
 impl<const BOARD_SIZE: usize> GameWidget<BOARD_SIZE>
 where
     [(); bitvec::mem::elts::<usize>(2 * BOARD_SIZE * BOARD_SIZE)]:,
+    [(); BOARD_SIZE * BOARD_SIZE]:,
 {
     pub fn new() -> Self {
         Self {
@@ -61,11 +63,29 @@ where
 impl<const BOARD_SIZE: usize> Widget for &GameWidget<BOARD_SIZE>
 where
     [(); bitvec::mem::elts::<usize>(2 * BOARD_SIZE * BOARD_SIZE)]:,
+    [(); BOARD_SIZE * BOARD_SIZE]:,
 {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let title = Line::from(" Go Board ".bold());
+        let prisoner_text = Line::from(vec![
+            "Prisoners Captured: ".into(),
+            format!(
+                "{}: {}",
+                player_name(Player::Black),
+                self.game.num_captured_by(Player::Black)
+            )
+            .yellow(),
+            " | ".into(),
+            format!(
+                "{}: {}",
+                player_name(Player::White),
+                self.game.num_captured_by(Player::White)
+            )
+            .yellow(),
+        ]);
         let block = Block::bordered()
             .title(title)
+            .title_bottom(prisoner_text)
             .borders(ratatui::widgets::Borders::ALL)
             .style(ratatui::style::Style::default().fg(ratatui::style::Color::White));
         let inner_area = block.inner(area);

@@ -94,6 +94,7 @@ where
     [(); BOARD_SIZE * BOARD_SIZE]:,
 {
     // TODO 19x19 boards can't fit their position in a u8. Need to bump to u16 for them.
+    // TODO Also other places in the code base may rely on u8 for counting or indexing stones, fix those as well. We probably should introduce a typedef that depends on BOARD_SIZE. Or maybe centralize the [Pos] class from here and make it do that.
     groups: [u8; BOARD_SIZE * BOARD_SIZE],
 
     num_groups: u8,
