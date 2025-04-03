@@ -109,6 +109,48 @@ where
     }
 }
 
+pub fn parse_board_from_string<const N: usize>(input: &str) -> Result<Board<N>, String>
+where
+    [(); bitvec::mem::elts::<usize>(2 * N * N)]:,
+{
+    let mut board = Board::<N>::new();
+    let mut input = input.chars().peekable();
+    for y in 0..N {
+        for x in 0..N {
+            trim_whitespaces(&mut input);
+            let cell_value = match input.next() {
+                Some('_') => None,
+                Some('○') => Some(Player::Black),
+                Some('●') => Some(Player::White),
+                char => {
+                    return Err(format!(
+                        "Invalid input format: expected '○' for black, '●' for white, or ' ' for empty cell but got {char:?}",
+                    ));
+                }
+            };
+            board.set(x, y, cell_value);
+        }
+        trim_whitespaces(&mut input);
+    }
+    trim_whitespaces(&mut input);
+    if let Some(char) = input.next() {
+        return Err(format!(
+            "Invalid input format: extra characters found after board: {char:?}"
+        ));
+    }
+    Ok(board)
+}
+
+fn trim_whitespaces(input: &mut std::iter::Peekable<std::str::Chars>) {
+    while let Some(&c) = input.peek() {
+        if c.is_whitespace() {
+            input.next(); // consume whitespace
+        } else {
+            break;
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use crate::board::Player;
@@ -163,6 +205,29 @@ mod tests {
                     );
                 }
             }
+        }
+    }
+
+    mod parse_board_from_string {
+        use super::*;
+
+        #[test]
+        fn test_parse_valid_board() {
+            let input = r#"
+                _ ○ ○
+                ○ ● ●
+                ○ _ ○
+            "#;
+            let board = parse_board_from_string::<3>(input).unwrap();
+            assert_eq!(board[(0, 0)], None);
+            assert_eq!(board[(0, 1)], Some(Player::Black));
+            assert_eq!(board[(0, 2)], Some(Player::Black));
+            assert_eq!(board[(1, 0)], Some(Player::Black));
+            assert_eq!(board[(1, 1)], Some(Player::White));
+            assert_eq!(board[(1, 2)], None);
+            assert_eq!(board[(2, 0)], Some(Player::Black));
+            assert_eq!(board[(2, 1)], Some(Player::White));
+            assert_eq!(board[(2, 2)], Some(Player::Black));
         }
     }
 }
