@@ -3,9 +3,7 @@ use derive_more::Display;
 use crate::Board;
 
 /// Assigns each stone on the board a number, so that connected stones have the same number.
-/// Numbers are not necessarily consecutive, there can be gaps.
-///
-/// Result is indexed as result[y][x]
+/// Groups are consecutive numbers starting from 0, where 0 is the first group found.
 pub fn group_connected_stones<const BoardSize: usize>(
     board: &Board<BoardSize>,
 ) -> GroupedStones<BoardSize>
@@ -94,19 +92,25 @@ where
 {
     // TODO 19x19 boards can't fit their position in a u8. Need to bump to u16 for them.
     groups: [u8; BoardSize * BoardSize],
+
+    num_groups: u8,
 }
 
 impl<const BoardSize: usize> GroupedStones<BoardSize>
 where
     [(); BoardSize * BoardSize]:,
 {
-    pub fn new(groups: [u8; BoardSize * BoardSize]) -> Self {
-        Self { groups }
+    pub fn new(groups: [u8; BoardSize * BoardSize], num_groups: u8) -> Self {
+        Self { groups, num_groups }
     }
 
     pub fn group_at(&self, x: usize, y: usize) -> u8 {
         assert!(x < BoardSize && y < BoardSize, "Coordinates out of bounds");
         self.groups[y * BoardSize + x]
+    }
+
+    pub fn num_groups(&self) -> u8 {
+        self.num_groups
     }
 }
 
@@ -115,6 +119,7 @@ where
     [(); BoardSize * BoardSize]:,
 {
     // Nodes pointing to themselves are roots and representatives of their group.
+    // Invariant A: forall i: groups[i].index() <= i (i.e. each node points to a parent that is either further up, or if in the same row then to the left, or itself)
     groups: [Pos<BoardSize>; BoardSize * BoardSize],
 }
 
@@ -136,6 +141,7 @@ where
     }
 
     pub fn add_to_group(&mut self, pos: Pos<BoardSize>, group_root: Pos<BoardSize>) {
+        assert!(group_root.index <= pos.index, "Invariant A violated");
         self.groups[pos.index()] = group_root;
     }
 
@@ -147,7 +153,7 @@ where
             // current_pos is not the root yet
 
             // Path compression using path splitting - replace the parent at the current position with the grand parent
-            self.groups[current_pos.index()] = grandparent_pos;
+            self.groups[current_pos.index()] = grandparent_pos; // Invariant A is upheld because of transitivity of the <= operator
 
             // And move one closer to the root
             current_pos = parent_pos;
@@ -163,24 +169,42 @@ where
         lhs_group_root: Pos<BoardSize>,
         rhs_group_root: Pos<BoardSize>,
     ) -> Pos<BoardSize> {
-        // For simplicity, we always make the left group the root.
-        // TODO union-by-size or union-by-rank would be more efficient
-        self.groups[rhs_group_root.index()] = lhs_group_root;
-        lhs_group_root
+        // union-by-size or union-by-rank would be more efficient.
+        // But we need to uphold invariant A so we don't have a choice.
+        if lhs_group_root.index <= rhs_group_root.index {
+            self.groups[rhs_group_root.index()] = lhs_group_root;
+            lhs_group_root
+        } else {
+            self.groups[lhs_group_root.index()] = rhs_group_root;
+            rhs_group_root
+        }
     }
 
     pub fn finalize(&mut self) -> GroupedStones<BoardSize> {
         let mut groups = [0u8; BoardSize * BoardSize];
+        // Because of invariant A, we know we'll always see the group root before seeing any other members of the group.
+        // This means to get consecutive group numbers, we can just assign each root a new number, and for non-roots
+        // we know we've already assigned a number to the root and can look it up.
+        let mut current_group_number = 0;
         for index in 0..(BoardSize * BoardSize) {
-            groups[index] = self.find_group_root(Pos::from_index(index)).index;
+            let current_pos = Pos::from_index(index);
+            let root_of_current_group = self.find_group_root(current_pos);
+            if root_of_current_group == current_pos {
+                // This is a root, assign it a new group number
+                groups[index] = current_group_number;
+                current_group_number += 1;
+            } else {
+                // Not a root, find its group number from the root
+                groups[index] = groups[root_of_current_group.index()];
+            }
         }
-        GroupedStones::new(groups)
+        GroupedStones::new(groups, current_group_number)
     }
 }
 
 #[cfg(test)]
 mod tests {
-    use std::collections::{HashMap, hash_map::Entry};
+    use std::collections::HashSet;
 
     use crate::{board::parse_board_from_string, testutils};
 
@@ -199,6 +223,11 @@ mod tests {
         )
         .unwrap();
         let grouped = group_connected_stones(&board);
+        assert_eq!(
+            1,
+            grouped.num_groups(),
+            "There should be 1 group: the empty spaces."
+        );
         let expected_group = grouped.group_at(0, 0);
         for y in 0..5 {
             for x in 0..5 {
@@ -220,6 +249,11 @@ mod tests {
         )
         .unwrap();
         let grouped = group_connected_stones(&board);
+        assert_eq!(
+            1,
+            grouped.num_groups(),
+            "There should be 1 group: all black stones are connected."
+        );
         let expected_group = grouped.group_at(0, 0);
         for y in 0..5 {
             for x in 0..5 {
@@ -241,12 +275,19 @@ mod tests {
         )
         .unwrap();
         let grouped = group_connected_stones(&board);
-        let expected_group_other_stones = grouped.group_at(0, 0);
-        assert_ne!(expected_group_other_stones, grouped.group_at(2, 2)); // The single stone is in its own group
+        assert_eq!(
+            2,
+            grouped.num_groups(),
+            "There should be 2 groups: one for the single stone and one for the empty spaces."
+        );
+        let expected_group_other_stones = 0;
+        let expected_group_single_stone = 1;
         for y in 0..5 {
             for x in 0..5 {
-                if (x, y) != (2, 2) {
-                    assert_eq!(expected_group_other_stones, grouped.group_at(x, y)); // All other cells should be in a shared group
+                if (x, y) == (2, 2) {
+                    assert_eq!(expected_group_single_stone, grouped.group_at(x, y));
+                } else {
+                    assert_eq!(expected_group_other_stones, grouped.group_at(x, y));
                 }
             }
         }
@@ -258,57 +299,22 @@ mod tests {
     where
         [(); BoardSize * BoardSize]:,
     {
+        let mut seen_groups = HashSet::new();
         let mut parser = testutils::NumbersParser::new(input);
         let mut groups = [0u8; BoardSize * BoardSize];
+        let mut num_groups = 0;
         for i in 0..(BoardSize * BoardSize) {
-            groups[i] = u8::try_from(parser.next_number().unwrap()).unwrap();
-        }
-        assert!(parser.next_number().is_none());
-        Ok(GroupedStones::new(groups))
-    }
-
-    fn assert_groups_isomorphic<const BoardSize: usize>(
-        lhs: &GroupedStones<BoardSize>,
-        rhs: &GroupedStones<BoardSize>,
-    ) where
-        [(); BoardSize * BoardSize]:,
-    {
-        // Assert that each group in lhs can be mapped to a unique group in rhs
-        fn assert_is_injective<const BoardSize: usize>(
-            lhs: &GroupedStones<BoardSize>,
-            rhs: &GroupedStones<BoardSize>,
-        ) where
-            [(); BoardSize * BoardSize]:,
-        {
-            // Groups can have different number in `lhs` and `rhs`, we just assert that the same elements are grouped together.
-            // We need to remember a mapping between the group numbers in lhs and rhs.
-            let mut map_lhs_to_rhs = HashMap::new();
-            for y in 0..BoardSize {
-                for x in 0..BoardSize {
-                    let lhs_group = lhs.group_at(x, y);
-                    let rhs_group = rhs.group_at(x, y);
-                    match map_lhs_to_rhs.entry(lhs_group) {
-                        Entry::Vacant(entry) => {
-                            entry.insert(rhs_group);
-                        }
-                        Entry::Occupied(entry) => {
-                            assert_eq!(
-                                *entry.get(),
-                                rhs_group,
-                                "Groups at ({x}, {y}) do not match",
-                            );
-                        }
-                    }
-                }
+            let group = u8::try_from(parser.next_number().unwrap()).unwrap();
+            groups[i] = group;
+            if seen_groups.insert(group) {
+                num_groups += 1;
             }
         }
-
-        // If lhs->rhs is injective and rhs->lhs is injective, then the mapping is bijective, which means lhs and rhs are isomorphic
-        assert_is_injective(lhs, rhs);
-        assert_is_injective(rhs, lhs);
+        assert!(parser.next_number().is_none());
+        Ok(GroupedStones::new(groups, num_groups))
     }
 
-    fn assert_has_groups<const BoardSize: usize>(
+    fn assert_groups_eq<const BoardSize: usize>(
         grouped: &GroupedStones<BoardSize>,
         expected_groups_str: &str,
     ) where
@@ -316,7 +322,11 @@ mod tests {
     {
         let expected_groups = parse_groups_from_string::<BoardSize>(expected_groups_str)
             .expect("Failed to parse expected groups from string");
-        assert_groups_isomorphic(&expected_groups, grouped);
+        assert_eq!(
+            &expected_groups.groups, &grouped.groups,
+            "The grouped stones do not match the expected groups.\nExpected:\n{:?}\nGot:\n{:?}",
+            expected_groups.groups, grouped.groups
+        );
     }
 
     #[test]
@@ -333,14 +343,14 @@ mod tests {
         .unwrap();
         let grouped = group_connected_stones(&board);
 
-        assert_has_groups(
+        assert_groups_eq(
             &grouped,
             r#"
-            01 11 02 12 12
-            11 11 13 03 03
-            04 13 13 15 03
-            14 05 05 15 03
-            05 05 05 05 16
+            0 1 2 3 3
+            1 1 4 5 5
+            6 4 4 7 5
+            8 9 9 7 5
+            9 9 9 9 10
         "#,
         );
     }
@@ -367,16 +377,16 @@ mod tests {
 
         let grouped = group_connected_stones(&board);
 
-        assert_has_groups(
+        assert_groups_eq(
             &grouped,
             r#"
-            5 6 6 6 6 6 5
-            5 0 0 6 1 1 5
-            5 6 6 6 6 6 5
-            5 5 5 5 5 5 5
-            5 7 7 7 7 7 5
-            5 2 2 7 3 3 5
-            5 7 7 7 7 7 5
+            0 1 1 1 1 1 0
+            0 2 2 1 3 3 0
+            0 1 1 1 1 1 0
+            0 0 0 0 0 0 0
+            0 4 4 4 4 4 0
+            0 5 5 4 6 6 0
+            0 4 4 4 4 4 0
         "#,
         );
     }
