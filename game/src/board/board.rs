@@ -4,19 +4,19 @@ use std::ops::Index;
 use super::{PlaceStoneError, Player};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct Board<const N: usize>
+pub struct Board<const BOARD_SIZE: usize>
 where
-    [(); bitvec::mem::elts::<usize>(2 * N * N)]:,
+    [(); bitvec::mem::elts::<usize>(2 * BOARD_SIZE * BOARD_SIZE)]:,
 {
     /// (x=0, y=0) origin is the top-left corner of the board
-    /// cells[2 * (N*y+ )] is true if the cell at (x, y) is occupied.
-    /// cells[2 * (N*y+x) + 1] can only be set if (x, y) is occupied and is true if the cell at (x, y) is black, false for white.
-    cells: BitArr!(for 2*N*N),
+    /// cells[2 * (BOARD_SIZE*y+ )] is true if the cell at (x, y) is occupied.
+    /// cells[2 * (BOARD_SIZE*y+x) + 1] can only be set if (x, y) is occupied and is true if the cell at (x, y) is black, false for white.
+    cells: BitArr!(for 2*BOARD_SIZE*BOARD_SIZE),
 }
 
-impl<const N: usize> Board<N>
+impl<const BOARD_SIZE: usize> Board<BOARD_SIZE>
 where
-    [(); bitvec::mem::elts::<usize>(2 * N * N)]:,
+    [(); bitvec::mem::elts::<usize>(2 * BOARD_SIZE * BOARD_SIZE)]:,
 {
     #[inline]
     pub fn new() -> Self {
@@ -45,7 +45,6 @@ where
 
     #[inline]
     pub fn is_occupied(&self, x: usize, y: usize) -> bool {
-        assert!(x < N && y < N, "Coordinates out of bounds");
         self._is_occupied(Self::index(x, y))
     }
 
@@ -58,10 +57,12 @@ where
     }
 
     #[inline]
-    pub fn set_if_empty(&mut self, x: usize, y: usize, value: Player) -> Result<(), PlaceStoneError>
-    where
-        [(); bitvec::mem::elts::<usize>(2 * N * N)]:,
-    {
+    pub fn set_if_empty(
+        &mut self,
+        x: usize,
+        y: usize,
+        value: Player,
+    ) -> Result<(), PlaceStoneError> {
         let index = Self::index(x, y);
         if self._is_occupied(index) {
             return Err(PlaceStoneError::CellOccupied);
@@ -73,18 +74,19 @@ where
 
     #[inline]
     const fn index(x: usize, y: usize) -> usize {
-        assert!(x < N && y < N, "Coordinates out of bounds");
-        2 * N * y + 2 * x
+        assert!(
+            x < BOARD_SIZE && y < BOARD_SIZE,
+            "Coordinates out of bounds"
+        );
+        2 * BOARD_SIZE * y + 2 * x
     }
 
     #[cfg(test)]
     #[inline]
     pub fn iter(&self) -> impl Iterator<Item = (usize, usize, Option<Player>)>
-    // TODO + ExactSizeIterator
-    where
-        [(); bitvec::mem::elts::<usize>(2 * N * N)]:,
+// TODO + ExactSizeIterator
     {
-        (0..N).flat_map(move |y| (0..N).map(move |x| (x, y, self[(x, y)])))
+        (0..BOARD_SIZE).flat_map(move |y| (0..BOARD_SIZE).map(move |x| (x, y, self[(x, y)])))
     }
 }
 

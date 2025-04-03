@@ -1,16 +1,16 @@
 use crate::board::{Board, PlaceStoneError, Player};
 
-pub struct Game<const BoardSize: usize>
+pub struct Game<const BOARD_SIZE: usize>
 where
-    [(); bitvec::mem::elts::<usize>(2 * BoardSize * BoardSize)]:,
+    [(); bitvec::mem::elts::<usize>(2 * BOARD_SIZE * BOARD_SIZE)]:,
 {
-    board: Board<BoardSize>,
+    board: Board<BOARD_SIZE>,
     current_player: Player,
 }
 
-impl<const BoardSize: usize> Game<BoardSize>
+impl<const BOARD_SIZE: usize> Game<BOARD_SIZE>
 where
-    [(); bitvec::mem::elts::<usize>(2 * BoardSize * BoardSize)]:,
+    [(); bitvec::mem::elts::<usize>(2 * BOARD_SIZE * BOARD_SIZE)]:,
 {
     pub fn new() -> Self {
         Self {
@@ -23,7 +23,7 @@ where
         self.current_player
     }
 
-    pub fn board(&self) -> &Board<BoardSize> {
+    pub fn board(&self) -> &Board<BOARD_SIZE> {
         &self.board
     }
 

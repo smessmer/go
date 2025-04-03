@@ -9,17 +9,17 @@ use ratatui::{
 
 use crate::board_widget::BoardWidget;
 
-pub struct GameWidget<const BoardSize: usize>
+pub struct GameWidget<const BOARD_SIZE: usize>
 where
-    [(); bitvec::mem::elts::<usize>(2 * BoardSize * BoardSize)]:,
+    [(); bitvec::mem::elts::<usize>(2 * BOARD_SIZE * BOARD_SIZE)]:,
 {
-    game: Game<BoardSize>,
+    game: Game<BOARD_SIZE>,
     current_pos: (usize, usize),
 }
 
-impl<const BoardSize: usize> GameWidget<BoardSize>
+impl<const BOARD_SIZE: usize> GameWidget<BOARD_SIZE>
 where
-    [(); bitvec::mem::elts::<usize>(2 * BoardSize * BoardSize)]:,
+    [(); bitvec::mem::elts::<usize>(2 * BOARD_SIZE * BOARD_SIZE)]:,
 {
     pub fn new() -> Self {
         Self {
@@ -29,7 +29,7 @@ where
     }
 
     pub fn move_right(&mut self) {
-        if self.current_pos.0 < BoardSize - 1 {
+        if self.current_pos.0 < BOARD_SIZE - 1 {
             self.current_pos.0 += 1;
         }
     }
@@ -47,7 +47,7 @@ where
     }
 
     pub fn move_down(&mut self) {
-        if self.current_pos.1 < BoardSize - 1 {
+        if self.current_pos.1 < BOARD_SIZE - 1 {
             self.current_pos.1 += 1;
         }
     }
@@ -58,9 +58,9 @@ where
     }
 }
 
-impl<const BoardSize: usize> Widget for &GameWidget<BoardSize>
+impl<const BOARD_SIZE: usize> Widget for &GameWidget<BOARD_SIZE>
 where
-    [(); bitvec::mem::elts::<usize>(2 * BoardSize * BoardSize)]:,
+    [(); bitvec::mem::elts::<usize>(2 * BOARD_SIZE * BOARD_SIZE)]:,
 {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let title = Line::from(" Go Board ".bold());

@@ -1,5 +1,4 @@
 use crossterm::event::{Event, KeyCode};
-use go_game::Player;
 use ratatui::Frame;
 
 use crate::game_widget::GameWidget;
