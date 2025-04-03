@@ -22,29 +22,30 @@ where
             let matches_left_stone = x > 0 && current_stone == board[(x - 1, y)];
             let matches_top_stone = y > 0 && current_stone == board[(x, y - 1)];
             let current_pos = Pos::from_pointed_to(x, y);
-            match (matches_left_stone, matches_top_stone) {
+            let group_for_current = match (matches_left_stone, matches_top_stone) {
                 (false, false) => {
                     // No connected stones, assign a new group
-                    result.add_new_group_at(current_pos);
+                    // New group points to itself
+                    current_pos
                 }
                 (true, false) => {
                     // Connected to the left stone, use its group
                     let left_pos = Pos::from_pointed_to(x - 1, y);
                     let left_group = result.find_group_root(left_pos);
-                    result.add_to_group(current_pos, left_group);
+                    left_group
                 }
                 (false, true) => {
                     // Connected to the top stone, use its group
                     let top_pos = Pos::from_pointed_to(x, y - 1);
                     let top_group = result.find_group_root(top_pos);
-                    result.add_to_group(current_pos, top_group);
+                    top_group
                 }
                 (true, true) => {
                     let left_pos = Pos::from_pointed_to(x - 1, y);
                     let left_group = result.find_group_root(left_pos);
                     let top_pos = Pos::from_pointed_to(x, y - 1);
                     let top_group = result.find_group_root(top_pos);
-                    let group_for_current = if left_group == top_group {
+                    if left_group == top_group {
                         // Both left and top are in the same group, just add ourselves to it
                         left_group
                     } else {
@@ -52,10 +53,10 @@ where
                         let surviving_group_root = result.merge_groups(left_group, top_group);
                         // And add ourselves to the new merged group
                         surviving_group_root
-                    };
-                    result.add_to_group(current_pos, group_for_current);
+                    }
                 }
-            }
+            };
+            result.add_to_group(current_pos, group_for_current);
         }
     }
 
@@ -136,11 +137,6 @@ where
             // Doesn't matter though because we never read any of those before writing to it.
             groups: [Pos::from_pointed_to(0, 0); BOARD_SIZE * BOARD_SIZE],
         }
-    }
-
-    pub fn add_new_group_at(&mut self, pos: Pos<BOARD_SIZE>) {
-        // New group points to itself
-        self.add_to_group(pos, pos);
     }
 
     pub fn add_to_group(&mut self, pos: Pos<BOARD_SIZE>, group_root: Pos<BOARD_SIZE>) {
