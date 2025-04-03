@@ -2,6 +2,7 @@ use go_game::Board;
 use ratatui::{
     buffer::Buffer,
     layout::{Constraint, Rect},
+    style::Stylize,
     widgets::{Row, Table, Widget},
 };
 
@@ -24,19 +25,21 @@ where
                     .map(|x| {
                         let is_current_pos = self.current_pos == (x, y);
                         let cell = self.board[(x, y)];
-                        match (is_current_pos, cell) {
-                            (false, Some(go_game::Player::White)) => "●",
-                            (false, Some(go_game::Player::Black)) => "○",
-                            (false, None) => " ",
-                            (true, Some(go_game::Player::White)) => "●*",
-                            (true, Some(go_game::Player::Black)) => "○*",
-                            (true, None) => " *",
+                        let cell_str = match cell {
+                            Some(go_game::Player::White) => "⬤ ",
+                            Some(go_game::Player::Black) => "◯ ",
+                            None => "  ",
+                        };
+                        if is_current_pos {
+                            cell_str.on_blue().bold()
+                        } else {
+                            cell_str.into()
                         }
                     })
-                    .collect::<Vec<&str>>(),
+                    .collect::<Vec<_>>(),
             )
         });
-        let widths = [Constraint::Length(3); BoardSize];
+        let widths = [Constraint::Length(2); BoardSize];
         let table = Table::new(rows, widths);
         table.render(area, buf);
     }
