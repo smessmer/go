@@ -6,6 +6,7 @@ use crate::{
     group_stones::{GroupedStones, group_connected_stones},
 };
 
+#[cfg_attr(test, derive(Debug, PartialEq))]
 pub struct Game<const BOARD_SIZE: usize>
 where
     [(); bitvec::mem::elts::<usize>(2 * BOARD_SIZE * BOARD_SIZE)]:,
@@ -41,8 +42,8 @@ where
 
     pub fn place_stone(&mut self, x: usize, y: usize) -> Result<(), PlaceStoneError> {
         self.board.set_if_empty(x, y, self.current_player)?;
-        self.current_player = self.current_player.other_player();
         self._take_prisoners();
+        self.current_player = self.current_player.other_player();
 
         Ok(())
     }
@@ -114,6 +115,8 @@ where
 
 #[cfg(test)]
 mod tests {
+    use crate::board::parse_board_from_string;
+
     use super::*;
 
     #[test]
@@ -156,5 +159,49 @@ mod tests {
         assert_eq!(game.current_player(), Player::White);
         assert!(game.place_stone(1, 1).is_ok());
         assert_eq!(game.current_player(), Player::Black);
+    }
+
+    #[test]
+    fn test_place_stone_and_take_prisoners() {
+        let board = parse_board_from_string::<5>(
+            r#"
+            _ ● ○ ○ ○
+            ● ● ○ ● ●
+            ○ ○ ○ ● _
+            ○ ● ● _ _
+            _ _ _ _ ○
+        "#,
+        )
+        .unwrap();
+        let mut game = Game::<5> {
+            board,
+            current_player: Player::White,
+            num_captured_by: enum_map! {
+                Player::Black => 0,
+                Player::White => 0,
+            },
+        };
+        game.place_stone(0, 4).unwrap();
+        let expected_new_board = parse_board_from_string::<5>(
+            r#"
+            _ ● _ _ _
+            ● ● _ ● ●
+            _ _ _ ● _
+            _ ● ● _ _
+            ● _ _ _ ○
+        "#,
+        )
+        .unwrap();
+        assert_eq!(
+            Game {
+                board: expected_new_board,
+                current_player: Player::Black,
+                num_captured_by: enum_map! {
+                    Player::White => 8, // White captured one group of stones
+                    Player::Black => 0,
+                },
+            },
+            game
+        );
     }
 }

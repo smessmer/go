@@ -1,9 +1,10 @@
 use bitvec::{BitArr, array::BitArray};
+use std::fmt::Debug;
 use std::ops::Index;
 
 use super::{PlaceStoneError, Player};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Board<const BOARD_SIZE: usize>
 where
     [(); bitvec::mem::elts::<usize>(2 * BOARD_SIZE * BOARD_SIZE)]:,
@@ -12,6 +13,28 @@ where
     /// cells[2 * (BOARD_SIZE*y+ )] is true if the cell at (x, y) is occupied.
     /// cells[2 * (BOARD_SIZE*y+x) + 1] can only be set if (x, y) is occupied and is true if the cell at (x, y) is black, false for white.
     cells: BitArr!(for 2*BOARD_SIZE*BOARD_SIZE),
+}
+
+impl<const BOARD_SIZE: usize> Debug for Board<BOARD_SIZE>
+where
+    [(); bitvec::mem::elts::<usize>(2 * BOARD_SIZE * BOARD_SIZE)]:,
+{
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        writeln!(f, "Board(")?;
+        for y in 0..BOARD_SIZE {
+            for x in 0..BOARD_SIZE {
+                let cell = self[(x, y)];
+                match cell {
+                    Some(Player::Black) => write!(f, "● ")?,
+                    Some(Player::White) => write!(f, "○ ")?,
+                    None => write!(f, "_ ")?,
+                }
+            }
+            writeln!(f)?;
+        }
+        writeln!(f, ")")?;
+        Ok(())
+    }
 }
 
 impl<const BOARD_SIZE: usize> Board<BOARD_SIZE>
