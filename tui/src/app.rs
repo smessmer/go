@@ -28,7 +28,7 @@ impl App {
             Event::Key(key) => {
                 // Handle key events here, e.g. for quitting the app
                 match key.code {
-                    KeyCode::Esc => {
+                    KeyCode::Esc | KeyCode::Char('q') => {
                         self.should_exit = true;
                     }
                     KeyCode::Left => {
@@ -42,6 +42,9 @@ impl App {
                     }
                     KeyCode::Down => {
                         self.game.move_down();
+                    }
+                    KeyCode::Char('p') => {
+                        self.game.pass_turn();
                     }
                     KeyCode::Enter | KeyCode::Char(' ') => {
                         if let Err(e) = self.game.place_stone() {

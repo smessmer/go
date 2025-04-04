@@ -49,6 +49,11 @@ where
         Ok(())
     }
 
+    pub fn pass_turn(&mut self) {
+        self.current_player = self.current_player.other_player();
+        // No need to take prisoners or update the board since no stone was placed
+    }
+
     fn _take_prisoners(&mut self) {
         // TODO Instead of re-calculating the union find every turn, it's probably cheaper to keep it and update it when stones are placed. Also, is then maybe a flood fill actually faster than a union find since we don't have to update the whole board when a stone is placed?
         let groups = group_connected_stones(self.board());
