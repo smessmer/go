@@ -129,6 +129,10 @@ impl<BS: BoardSize> Pos<BS> {
             index < <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE,
             "Index out of bounds"
         );
+        Self::_from_index(index)
+    }
+
+    pub fn _from_index(index: usize) -> Self {
         Self {
             index: NumStones::<BS>::from_usize(index),
         }
@@ -146,36 +150,48 @@ impl<BS: BoardSize> Pos<BS> {
         self.index.into_usize() / <BS as BoardSize>::SIZE
     }
 
-    pub fn increment_x(&mut self) -> Result<(), PosError> {
-        if self.x() >= <BS as BoardSize>::SIZE - 1 {
-            return Err(PosError::AtEdge);
+    pub fn left(&self) -> Option<Self> {
+        if self.x() > 0 {
+            Some(Self {
+                index: self.index - NumStones::ONE,
+            })
+        } else {
+            None
         }
-        self.index += NumStones::ONE;
-        Ok(())
     }
 
-    pub fn decrement_x(&mut self) -> Result<(), PosError> {
-        if self.x() == 0 {
-            return Err(PosError::AtEdge);
+    pub fn right(&self) -> Option<Self> {
+        if self.x() < <BS as BoardSize>::SIZE - 1 {
+            Some(Self {
+                index: self.index + NumStones::ONE,
+            })
+        } else {
+            None
         }
-        self.index -= NumStones::ONE;
-        Ok(())
     }
 
-    pub fn increment_y(&mut self) -> Result<(), PosError> {
-        if self.y() >= <BS as BoardSize>::SIZE - 1 {
-            return Err(PosError::AtEdge);
+    pub fn up(&self) -> Option<Self> {
+        if self.y() > 0 {
+            Some(Self {
+                index: self.index - NumStones::<BS>::from_usize(<BS as BoardSize>::SIZE),
+            })
+        } else {
+            None
         }
-        self.index += NumStones::<BS>::from_usize(<BS as BoardSize>::SIZE);
-        Ok(())
     }
 
-    pub fn decrement_y(&mut self) -> Result<(), PosError> {
-        if self.y() == 0 {
-            return Err(PosError::AtEdge);
+    pub fn down(&self) -> Option<Self> {
+        if self.y() < <BS as BoardSize>::SIZE - 1 {
+            Some(Self {
+                index: self.index + NumStones::<BS>::from_usize(<BS as BoardSize>::SIZE),
+            })
+        } else {
+            None
         }
-        self.index -= NumStones::<BS>::from_usize(<BS as BoardSize>::SIZE);
-        Ok(())
+    }
+
+    pub fn all_positions() -> impl Iterator<Item = Self> + ExactSizeIterator {
+        (0..<BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE).map(Self::_from_index)
     }
 }
 

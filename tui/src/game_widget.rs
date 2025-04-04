@@ -39,19 +39,27 @@ where
     }
 
     pub fn move_right(&mut self) {
-        let _ = self.current_pos.increment_x();
+        if let Some(right) = self.current_pos.right() {
+            self.current_pos = right;
+        }
     }
 
     pub fn move_left(&mut self) {
-        let _ = self.current_pos.decrement_x();
+        if let Some(left) = self.current_pos.left() {
+            self.current_pos = left;
+        }
     }
 
     pub fn move_up(&mut self) {
-        let _ = self.current_pos.decrement_y();
+        if let Some(up) = self.current_pos.up() {
+            self.current_pos = up;
+        }
     }
 
     pub fn move_down(&mut self) {
-        let _ = self.current_pos.increment_y();
+        if let Some(down) = self.current_pos.down() {
+            self.current_pos = down;
+        }
     }
 
     pub fn place_stone(&mut self) -> Result<(), go_game::PlaceStoneError> {

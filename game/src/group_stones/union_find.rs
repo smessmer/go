@@ -65,16 +65,15 @@ where
         // This means to get consecutive group numbers, we can just assign each root a new number, and for non-roots
         // we know we've already assigned a number to the root and can look it up.
         let mut current_group_number = GroupId::ZERO;
-        for index in 0..(<BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE) {
-            let current_pos = Pos::from_index(index);
+        for current_pos in Pos::all_positions() {
             let root_of_current_group = self.find_group_root(current_pos);
             if root_of_current_group == current_pos {
                 // This is a root, assign it a new group number
-                groups[index] = current_group_number;
+                groups[current_pos.index()] = current_group_number;
                 current_group_number.increment();
             } else {
                 // Not a root, find its group number from the root
-                groups[index] = groups[root_of_current_group.index()];
+                groups[current_pos.index()] = groups[root_of_current_group.index()];
             }
         }
         GroupedStones::new(groups, current_group_number)

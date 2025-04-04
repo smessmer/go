@@ -12,52 +12,51 @@ where
     // Using union-find algorithm
 
     let mut result = UnionFindAlgorithm::new();
-    for y in 0..<BS as BoardSize>::SIZE {
-        for x in 0..<BS as BoardSize>::SIZE {
-            // We have already assigned groups to all rows above and in our current row to all cells to the left.
-            // We now need to find the group the cell at (x, y).
-            let current_stone = board[Pos::from_xy(x, y)];
-            let matches_left_stone = x > 0 && current_stone == board[Pos::from_xy(x - 1, y)];
-            let matches_top_stone = y > 0 && current_stone == board[Pos::from_xy(x, y - 1)];
-            let current_pos = Pos::from_xy(x, y);
-            let group_for_current = match (matches_left_stone, matches_top_stone) {
-                (false, false) => {
-                    // No connected stones, assign a new group
-                    // New group points to itself
-                    current_pos
-                }
-                (true, false) => {
-                    // Connected to the left stone, use its group
-                    // TODO Would it be faster to just add it as a child below left_pos instead of looking up left_group?
-                    let left_pos = Pos::from_xy(x - 1, y);
-                    let left_group = result.find_group_root(left_pos);
+    for current_pos in Pos::all_positions() {
+        // We have already assigned groups to all rows above and in our current row to all cells to the left.
+        // We now need to find the group the cell at (x, y).
+        let current_stone = board[current_pos];
+        let left_pos = current_pos.left();
+        let top_pos = current_pos.up();
+        let matches_left_stone = left_pos
+            .map(|left| current_stone == board[left])
+            .unwrap_or(false);
+        let matches_top_stone = top_pos
+            .map(|top| current_stone == board[top])
+            .unwrap_or(false);
+        let group_for_current = match (matches_left_stone, matches_top_stone) {
+            (false, false) => {
+                // No connected stones, assign a new group
+                // New group points to itself
+                current_pos
+            }
+            (true, false) => {
+                // Connected to the left stone, use its group
+                // TODO Would it be faster to just add it as a child below left_pos instead of looking up left_group?
+                let left_group = result.find_group_root(left_pos.unwrap());
+                left_group
+            }
+            (false, true) => {
+                // Connected to the top stone, use its group
+                // TODO Would it be faster to just add it as a child below top_pos instead of looking up top_group?
+                let top_group = result.find_group_root(top_pos.unwrap());
+                top_group
+            }
+            (true, true) => {
+                let left_group = result.find_group_root(left_pos.unwrap());
+                let top_group = result.find_group_root(top_pos.unwrap());
+                if left_group == top_group {
+                    // Both left and top are in the same group, just add ourselves to it
                     left_group
+                } else {
+                    // The new stone connects left and top. Merge the groups.
+                    let surviving_group_root = result.merge_groups(left_group, top_group);
+                    // And add ourselves to the new merged group
+                    surviving_group_root
                 }
-                (false, true) => {
-                    // Connected to the top stone, use its group
-                    // TODO Would it be faster to just add it as a child below top_pos instead of looking up top_group?
-                    let top_pos = Pos::from_xy(x, y - 1);
-                    let top_group = result.find_group_root(top_pos);
-                    top_group
-                }
-                (true, true) => {
-                    let left_pos = Pos::from_xy(x - 1, y);
-                    let left_group = result.find_group_root(left_pos);
-                    let top_pos = Pos::from_xy(x, y - 1);
-                    let top_group = result.find_group_root(top_pos);
-                    if left_group == top_group {
-                        // Both left and top are in the same group, just add ourselves to it
-                        left_group
-                    } else {
-                        // The new stone connects left and top. Merge the groups.
-                        let surviving_group_root = result.merge_groups(left_group, top_group);
-                        // And add ourselves to the new merged group
-                        surviving_group_root
-                    }
-                }
-            };
-            result.add_to_group(current_pos, group_for_current);
-        }
+            }
+        };
+        result.add_to_group(current_pos, group_for_current);
     }
 
     result.finalize()

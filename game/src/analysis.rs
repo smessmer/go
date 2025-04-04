@@ -66,39 +66,33 @@ where
             pos_to_group.num_groups().into_usize()
         ];
 
-        for y in 0..<BS as BoardSize>::SIZE {
-            for x in 0..<BS as BoardSize>::SIZE {
-                if board.is_occupied(Pos::from_xy(x, y)) {
-                    // It's a filled cell. Remember the owner of this group
-                    let group = pos_to_group.group_at(Pos::from_xy(x, y)).into_usize();
-                    if liberties_and_owners[group].owner.is_none() {
-                        liberties_and_owners[group].owner = board[Pos::from_xy(x, y)];
-                    }
-                } else {
-                    // It's an empty cell. Any neighboring group that is occupied will get a liberty added.
-                    // But we need to make sure we only add it once if two neighboring fields are from the same group.
-                    // This code also adds liberties to the group representing the empty cells but that doesn't really matter.
-                    let mut groups_to_add_liberty_to: SmallSet<[GroupId<BS>; 5]> = SmallSet::new();
-                    groups_to_add_liberty_to.insert(pos_to_group.group_at(Pos::from_xy(x, y)));
-                    if x > 0 {
-                        groups_to_add_liberty_to
-                            .insert(pos_to_group.group_at(Pos::from_xy(x - 1, y)));
-                    }
-                    if y > 0 {
-                        groups_to_add_liberty_to
-                            .insert(pos_to_group.group_at(Pos::from_xy(x, y - 1)));
-                    }
-                    if x < <BS as BoardSize>::SIZE - 1 {
-                        groups_to_add_liberty_to
-                            .insert(pos_to_group.group_at(Pos::from_xy(x + 1, y)));
-                    }
-                    if y < <BS as BoardSize>::SIZE - 1 {
-                        groups_to_add_liberty_to
-                            .insert(pos_to_group.group_at(Pos::from_xy(x, y + 1)));
-                    }
-                    for group_index in groups_to_add_liberty_to.iter() {
-                        liberties_and_owners[group_index.into_usize()].liberties += NumStones::ONE;
-                    }
+        for pos in Pos::all_positions() {
+            if board.is_occupied(pos) {
+                // It's a filled cell. Remember the owner of this group
+                let group = pos_to_group.group_at(pos).into_usize();
+                if liberties_and_owners[group].owner.is_none() {
+                    liberties_and_owners[group].owner = board[pos];
+                }
+            } else {
+                // It's an empty cell. Any neighboring group that is occupied will get a liberty added.
+                // But we need to make sure we only add it once if two neighboring fields are from the same group.
+                // This code also adds liberties to the group representing the empty cells but that doesn't really matter.
+                let mut groups_to_add_liberty_to: SmallSet<[GroupId<BS>; 5]> = SmallSet::new();
+                groups_to_add_liberty_to.insert(pos_to_group.group_at(pos));
+                if let Some(left) = pos.left() {
+                    groups_to_add_liberty_to.insert(pos_to_group.group_at(left));
+                }
+                if let Some(top) = pos.up() {
+                    groups_to_add_liberty_to.insert(pos_to_group.group_at(top));
+                }
+                if let Some(right) = pos.right() {
+                    groups_to_add_liberty_to.insert(pos_to_group.group_at(right));
+                }
+                if let Some(down) = pos.down() {
+                    groups_to_add_liberty_to.insert(pos_to_group.group_at(down));
+                }
+                for group_index in groups_to_add_liberty_to.iter() {
+                    liberties_and_owners[group_index.into_usize()].liberties += NumStones::ONE;
                 }
             }
         }

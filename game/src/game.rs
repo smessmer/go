@@ -106,13 +106,11 @@ where
 
     fn _capture_group(&mut self, group_to_capture: GroupId<BS>) -> NumStones<BS> {
         let mut num_captured = NumStones::ZERO;
-        for y in 0..<BS as BoardSize>::SIZE {
-            for x in 0..<BS as BoardSize>::SIZE {
-                if self.analysis.group_at(Pos::from_xy(x, y)) == group_to_capture {
-                    // This stone is part of the captured group, remove it from the board
-                    self.board.set(Pos::from_xy(x, y), None);
-                    num_captured += NumStones::ONE;
-                }
+        for pos in Pos::all_positions() {
+            if self.analysis.group_at(pos) == group_to_capture {
+                // This stone is part of the captured group, remove it from the board
+                self.board.set(pos, None);
+                num_captured += NumStones::ONE;
             }
         }
         num_captured
