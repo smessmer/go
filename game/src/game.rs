@@ -108,7 +108,7 @@ where
         let mut num_captured = NumStones::ZERO;
         for y in 0..<BS as BoardSize>::SIZE {
             for x in 0..<BS as BoardSize>::SIZE {
-                if self.analysis.group_at(Pos::from_pointed_to(x, y)) == group_to_capture {
+                if self.analysis.group_at(Pos::from_xy(x, y)) == group_to_capture {
                     // This stone is part of the captured group, remove it from the board
                     self.board.set(x, y, None);
                     num_captured += NumStones::ONE;

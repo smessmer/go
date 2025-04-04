@@ -118,8 +118,7 @@ pub struct Pos<BS: BoardSize> {
 }
 
 impl<BS: BoardSize> Pos<BS> {
-    // TODO Rename to from_xy
-    pub fn from_pointed_to(x: usize, y: usize) -> Self {
+    pub fn from_xy(x: usize, y: usize) -> Self {
         Self::from_index(y * <BS as BoardSize>::SIZE + x)
     }
 

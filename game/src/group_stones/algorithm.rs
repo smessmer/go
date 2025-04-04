@@ -19,7 +19,7 @@ where
             let current_stone = board[(x, y)];
             let matches_left_stone = x > 0 && current_stone == board[(x - 1, y)];
             let matches_top_stone = y > 0 && current_stone == board[(x, y - 1)];
-            let current_pos = Pos::from_pointed_to(x, y);
+            let current_pos = Pos::from_xy(x, y);
             let group_for_current = match (matches_left_stone, matches_top_stone) {
                 (false, false) => {
                     // No connected stones, assign a new group
@@ -29,21 +29,21 @@ where
                 (true, false) => {
                     // Connected to the left stone, use its group
                     // TODO Would it be faster to just add it as a child below left_pos instead of looking up left_group?
-                    let left_pos = Pos::from_pointed_to(x - 1, y);
+                    let left_pos = Pos::from_xy(x - 1, y);
                     let left_group = result.find_group_root(left_pos);
                     left_group
                 }
                 (false, true) => {
                     // Connected to the top stone, use its group
                     // TODO Would it be faster to just add it as a child below top_pos instead of looking up top_group?
-                    let top_pos = Pos::from_pointed_to(x, y - 1);
+                    let top_pos = Pos::from_xy(x, y - 1);
                     let top_group = result.find_group_root(top_pos);
                     top_group
                 }
                 (true, true) => {
-                    let left_pos = Pos::from_pointed_to(x - 1, y);
+                    let left_pos = Pos::from_xy(x - 1, y);
                     let left_group = result.find_group_root(left_pos);
-                    let top_pos = Pos::from_pointed_to(x, y - 1);
+                    let top_pos = Pos::from_xy(x, y - 1);
                     let top_group = result.find_group_root(top_pos);
                     if left_group == top_group {
                         // Both left and top are in the same group, just add ourselves to it
@@ -93,10 +93,10 @@ mod tests {
             grouped.num_groups().into_usize(),
             "There should be 1 group: the empty spaces."
         );
-        let expected_group = grouped.group_at(Pos::from_pointed_to(0, 0));
+        let expected_group = grouped.group_at(Pos::from_xy(0, 0));
         for y in 0..5 {
             for x in 0..5 {
-                assert_eq!(expected_group, grouped.group_at(Pos::from_pointed_to(x, y)));
+                assert_eq!(expected_group, grouped.group_at(Pos::from_xy(x, y)));
             }
         }
     }
@@ -119,10 +119,10 @@ mod tests {
             grouped.num_groups().into_usize(),
             "There should be 1 group: all black stones are connected."
         );
-        let expected_group = grouped.group_at(Pos::from_pointed_to(0, 0));
+        let expected_group = grouped.group_at(Pos::from_xy(0, 0));
         for y in 0..5 {
             for x in 0..5 {
-                assert_eq!(expected_group, grouped.group_at(Pos::from_pointed_to(x, y)));
+                assert_eq!(expected_group, grouped.group_at(Pos::from_xy(x, y)));
             }
         }
     }
@@ -152,12 +152,12 @@ mod tests {
                 if (x, y) == (2, 2) {
                     assert_eq!(
                         expected_group_single_stone,
-                        grouped.group_at(Pos::from_pointed_to(x, y))
+                        grouped.group_at(Pos::from_xy(x, y))
                     );
                 } else {
                     assert_eq!(
                         expected_group_other_stones,
-                        grouped.group_at(Pos::from_pointed_to(x, y))
+                        grouped.group_at(Pos::from_xy(x, y))
                     );
                 }
             }

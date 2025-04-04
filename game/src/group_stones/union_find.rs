@@ -19,7 +19,7 @@ where
         Self {
             // Initial state is all nodes belong to the same group.
             // Doesn't matter though because we never read any of those before writing to it.
-            groups: [Pos::from_pointed_to(0, 0); <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE],
+            groups: [Pos::from_xy(0, 0); <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE],
         }
     }
 

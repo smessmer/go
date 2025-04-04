@@ -70,9 +70,7 @@ where
             for x in 0..<BS as BoardSize>::SIZE {
                 if board.is_occupied(x, y) {
                     // It's a filled cell. Remember the owner of this group
-                    let group = pos_to_group
-                        .group_at(Pos::from_pointed_to(x, y))
-                        .into_usize();
+                    let group = pos_to_group.group_at(Pos::from_xy(x, y)).into_usize();
                     if liberties_and_owners[group].owner.is_none() {
                         liberties_and_owners[group].owner = board[(x, y)];
                     }
@@ -81,23 +79,22 @@ where
                     // But we need to make sure we only add it once if two neighboring fields are from the same group.
                     // This code also adds liberties to the group representing the empty cells but that doesn't really matter.
                     let mut groups_to_add_liberty_to: SmallSet<[GroupId<BS>; 5]> = SmallSet::new();
-                    groups_to_add_liberty_to
-                        .insert(pos_to_group.group_at(Pos::from_pointed_to(x, y)));
+                    groups_to_add_liberty_to.insert(pos_to_group.group_at(Pos::from_xy(x, y)));
                     if x > 0 {
                         groups_to_add_liberty_to
-                            .insert(pos_to_group.group_at(Pos::from_pointed_to(x - 1, y)));
+                            .insert(pos_to_group.group_at(Pos::from_xy(x - 1, y)));
                     }
                     if y > 0 {
                         groups_to_add_liberty_to
-                            .insert(pos_to_group.group_at(Pos::from_pointed_to(x, y - 1)));
+                            .insert(pos_to_group.group_at(Pos::from_xy(x, y - 1)));
                     }
                     if x < <BS as BoardSize>::SIZE - 1 {
                         groups_to_add_liberty_to
-                            .insert(pos_to_group.group_at(Pos::from_pointed_to(x + 1, y)));
+                            .insert(pos_to_group.group_at(Pos::from_xy(x + 1, y)));
                     }
                     if y < <BS as BoardSize>::SIZE - 1 {
                         groups_to_add_liberty_to
-                            .insert(pos_to_group.group_at(Pos::from_pointed_to(x, y + 1)));
+                            .insert(pos_to_group.group_at(Pos::from_xy(x, y + 1)));
                     }
                     for group_index in groups_to_add_liberty_to.iter() {
                         liberties_and_owners[group_index.into_usize()].liberties += NumStones::ONE;
