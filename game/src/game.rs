@@ -57,22 +57,49 @@ where
     fn _take_prisoners(&mut self) {
         // TODO Instead of re-calculating the union find every turn, it's probably cheaper to keep it and update it when stones are placed. Also, is then maybe a flood fill actually faster than a union find since we don't have to update the whole board when a stone is placed?
         let groups = group_connected_stones(self.board());
-        let liberties_of_group = self._liberties_of_groups(&groups);
-        for (group, num_liberties) in liberties_of_group.iter().enumerate() {
-            if *num_liberties == NumStones::ZERO {
+
+        // First capture all opponent groups without liberties
+        let liberties_and_owners_of_group = self._liberties_and_owners_of_groups(&groups);
+        self._player_takes_prisoners(&groups, &liberties_and_owners_of_group, self.current_player);
+
+        // Then take our own stones as prisoners
+        let liberties_and_owners_of_group = self._liberties_and_owners_of_groups(&groups);
+        let opponent = self.current_player.other_player();
+        self._player_takes_prisoners(&groups, &liberties_and_owners_of_group, opponent);
+    }
+
+    fn _player_takes_prisoners(
+        &mut self,
+        groups: &GroupedStones<BS>,
+        liberties_and_owners_of_group: &[(Option<Player>, NumStones<BS>)],
+        player: Player,
+    ) {
+        let opponent = player.other_player();
+        for (group, (owner, num_liberties)) in liberties_and_owners_of_group.iter().enumerate() {
+            if *owner == Some(opponent) && *num_liberties == NumStones::ZERO {
                 // This group has no liberties left, so it is captured
                 let num_captured = self._capture_group(&groups, GroupId::from_usize(group));
-                self.num_captured_by[self.current_player] += num_captured;
+                self.num_captured_by[player] += num_captured;
             }
         }
     }
 
-    fn _liberties_of_groups(&self, groups: &GroupedStones<BS>) -> Vec<NumStones<BS>> {
-        let mut liberties = vec![NumStones::ZERO; groups.num_groups().into_usize()];
+    fn _liberties_and_owners_of_groups(
+        &self,
+        groups: &GroupedStones<BS>,
+    ) -> Vec<(Option<Player>, NumStones<BS>)> {
+        let mut liberties_and_owners =
+            vec![(None, NumStones::ZERO); groups.num_groups().into_usize()];
 
         for y in 0..<BS as BoardSize>::SIZE {
             for x in 0..<BS as BoardSize>::SIZE {
-                if !self.board.is_occupied(x, y) {
+                if self.board.is_occupied(x, y) {
+                    // It's a filled cell. Remember the owner of this group
+                    let group = groups.group_at(x, y).into_usize();
+                    if liberties_and_owners[group].0.is_none() {
+                        liberties_and_owners[group].0 = self.board[(x, y)];
+                    }
+                } else {
                     // It's an empty cell. Any neighboring group that is occupied will get a liberty added.
                     // But we need to make sure we only add it once if two neighboring fields are from the same group.
                     // This code also adds liberties to the group representing the empty cells but that doesn't really matter.
@@ -91,13 +118,13 @@ where
                         groups_to_add_liberty_to.insert(groups.group_at(x, y + 1));
                     }
                     for group_index in groups_to_add_liberty_to.iter() {
-                        liberties[group_index.into_usize()] += NumStones::ONE;
+                        liberties_and_owners[group_index.into_usize()].1 += NumStones::ONE;
                     }
                 }
             }
         }
 
-        liberties
+        liberties_and_owners
     }
 
     fn _capture_group(
@@ -208,6 +235,94 @@ mod tests {
                 current_player: Player::Black,
                 num_captured_by: enum_map! {
                     Player::White => NumStones::from_usize(8), // White captured one group of stones
+                    Player::Black => NumStones::from_usize(0),
+                },
+            },
+            game
+        );
+    }
+
+    #[test]
+    fn capture_opponent_before_capturing_self_black_moves() {
+        let board = parse_board_from_string::<BoardSize5x5>(
+            r#"
+            ○ ○ ○ ○ ○
+            ○ ● ● ● ○
+            ○ ● _ ● ○
+            ○ ● ● ● ○
+            ○ ○ ○ ○ ○
+        "#,
+        )
+        .unwrap();
+        let mut game = Game::<BoardSize5x5> {
+            board,
+            current_player: Player::Black,
+            num_captured_by: enum_map! {
+                Player::Black => NumStones::ZERO,
+                Player::White => NumStones::ZERO,
+            },
+        };
+        game.place_stone(2, 2).unwrap();
+        let expected_new_board = parse_board_from_string::<BoardSize5x5>(
+            r#"
+            ○ ○ ○ ○ ○
+            ○ _ _ _ ○
+            ○ _ ○ _ ○
+            ○ _ _ _ ○
+            ○ ○ ○ ○ ○
+        "#,
+        )
+        .unwrap();
+        assert_eq!(
+            Game {
+                board: expected_new_board,
+                current_player: Player::White,
+                num_captured_by: enum_map! {
+                    Player::White => NumStones::from_usize(0),
+                    Player::Black => NumStones::from_usize(8),
+                },
+            },
+            game
+        );
+    }
+
+    #[test]
+    fn capture_opponent_before_capturing_self_white_moves() {
+        let board = parse_board_from_string::<BoardSize5x5>(
+            r#"
+            ● ● ● ● ●
+            ● ○ ○ ○ ●
+            ● ○ _ ○ ●
+            ● ○ ○ ○ ●
+            ● ● ● ● ●
+        "#,
+        )
+        .unwrap();
+        let mut game = Game::<BoardSize5x5> {
+            board,
+            current_player: Player::White,
+            num_captured_by: enum_map! {
+                Player::Black => NumStones::ZERO,
+                Player::White => NumStones::ZERO,
+            },
+        };
+        game.place_stone(2, 2).unwrap();
+        let expected_new_board = parse_board_from_string::<BoardSize5x5>(
+            r#"
+            ● ● ● ● ●
+            ● _ _ _ ●
+            ● _ ● _ ●
+            ● _ _ _ ●
+            ● ● ● ● ●
+        "#,
+        )
+        .unwrap();
+        assert_eq!(
+            Game {
+                board: expected_new_board,
+                current_player: Player::Black,
+                num_captured_by: enum_map! {
+                    Player::White => NumStones::from_usize(8),
                     Player::Black => NumStones::from_usize(0),
                 },
             },
