@@ -9,7 +9,7 @@ pub struct GroupedStones<BS: BoardSize>
 where
     [(); <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE]:,
 {
-    groups: [GroupId<BS>; <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE],
+    pos_to_group: [GroupId<BS>; <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE],
 
     num_groups: GroupId<BS>,
 }
@@ -19,14 +19,17 @@ where
     [(); <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE]:,
 {
     pub fn new(
-        groups: [GroupId<BS>; <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE],
+        pos_to_group: [GroupId<BS>; <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE],
         num_groups: GroupId<BS>,
     ) -> Self {
-        Self { groups, num_groups }
+        Self {
+            pos_to_group,
+            num_groups,
+        }
     }
 
     pub fn group_at(&self, pos: Pos<BS>) -> GroupId<BS> {
-        self.groups[pos.index()]
+        self.pos_to_group[pos.index()]
     }
 
     pub fn num_groups(&self) -> GroupId<BS> {
