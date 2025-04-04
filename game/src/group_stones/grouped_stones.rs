@@ -1,4 +1,4 @@
-use crate::BoardSize;
+use crate::{BoardSize, board::Pos};
 #[cfg(test)]
 use derive_where::derive_where;
 
@@ -25,12 +25,8 @@ where
         Self { groups, num_groups }
     }
 
-    pub fn group_at(&self, x: usize, y: usize) -> GroupId<BS> {
-        assert!(
-            x < <BS as BoardSize>::SIZE && y < <BS as BoardSize>::SIZE,
-            "Coordinates out of bounds"
-        );
-        self.groups[y * <BS as BoardSize>::SIZE + x]
+    pub fn group_at(&self, pos: Pos<BS>) -> GroupId<BS> {
+        self.groups[pos.index()]
     }
 
     pub fn num_groups(&self) -> GroupId<BS> {

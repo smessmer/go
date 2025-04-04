@@ -51,6 +51,7 @@ where
         }
     }
 
+    // TODO Use Pos class in set and get and is_occupied
     #[inline]
     pub fn set(&mut self, x: usize, y: usize, value: Option<Player>) {
         let index = Self::index(x, y);
@@ -104,6 +105,7 @@ where
             x < <BS as BoardSize>::SIZE && y < <BS as BoardSize>::SIZE,
             "Coordinates out of bounds"
         );
+        // TODO Use Pos class
         2 * <BS as BoardSize>::SIZE * y + 2 * x
     }
 

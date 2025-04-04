@@ -93,10 +93,10 @@ mod tests {
             grouped.num_groups().into_usize(),
             "There should be 1 group: the empty spaces."
         );
-        let expected_group = grouped.group_at(0, 0);
+        let expected_group = grouped.group_at(Pos::from_pointed_to(0, 0));
         for y in 0..5 {
             for x in 0..5 {
-                assert_eq!(expected_group, grouped.group_at(x, y));
+                assert_eq!(expected_group, grouped.group_at(Pos::from_pointed_to(x, y)));
             }
         }
     }
@@ -119,10 +119,10 @@ mod tests {
             grouped.num_groups().into_usize(),
             "There should be 1 group: all black stones are connected."
         );
-        let expected_group = grouped.group_at(0, 0);
+        let expected_group = grouped.group_at(Pos::from_pointed_to(0, 0));
         for y in 0..5 {
             for x in 0..5 {
-                assert_eq!(expected_group, grouped.group_at(x, y));
+                assert_eq!(expected_group, grouped.group_at(Pos::from_pointed_to(x, y)));
             }
         }
     }
@@ -150,9 +150,15 @@ mod tests {
         for y in 0..5 {
             for x in 0..5 {
                 if (x, y) == (2, 2) {
-                    assert_eq!(expected_group_single_stone, grouped.group_at(x, y));
+                    assert_eq!(
+                        expected_group_single_stone,
+                        grouped.group_at(Pos::from_pointed_to(x, y))
+                    );
                 } else {
-                    assert_eq!(expected_group_other_stones, grouped.group_at(x, y));
+                    assert_eq!(
+                        expected_group_other_stones,
+                        grouped.group_at(Pos::from_pointed_to(x, y))
+                    );
                 }
             }
         }

@@ -1,5 +1,6 @@
 #![feature(generic_const_exprs)]
 
+mod analysis;
 mod board;
 mod game;
 mod group_stones;
