@@ -18,6 +18,7 @@ crossterm = "^0.28.1"
 smallset = "^0.1.1"
 enum-map = "^2.7.3"
 derive-where = "^1.2.7"
+actually_beep = "^0.1.1"
 
 [profile.release]
 lto = "fat"

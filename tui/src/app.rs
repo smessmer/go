@@ -1,3 +1,4 @@
+use actually_beep::beep_with_hz_and_millis;
 use crossterm::event::{Event, KeyCode};
 use go_game::BoardSize9x9;
 use ratatui::Frame;
@@ -48,7 +49,7 @@ impl App {
                     }
                     KeyCode::Enter | KeyCode::Char(' ') => {
                         if let Err(e) = self.game.place_stone() {
-                            // TODO Show error and/or play sound
+                            beep_with_hz_and_millis(200, 75).unwrap();
                         }
                     }
                     _ => (),
