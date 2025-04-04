@@ -3,8 +3,12 @@
 mod board;
 mod game;
 mod group_stones;
+mod utils;
 
-pub use board::{Board, PlaceStoneError, Player};
+pub use board::{
+    Board, BoardSize, BoardSize9x9, BoardSize13x13, BoardSize19x19, NumStones, PlaceStoneError,
+    Player,
+};
 pub use game::Game;
 
 #[cfg(test)]

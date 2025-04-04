@@ -6,6 +6,7 @@ version.workspace = true
 
 [dependencies]
 bitvec.workspace = true
-derive_more = {workspace = true, features = ["error", "display"]}
+derive_more = {workspace = true, features = ["error", "debug", "display", "add", "add_assign"]}
 smallset.workspace = true
 enum-map.workspace = true
+derive-where.workspace = true

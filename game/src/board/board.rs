@@ -1,28 +1,31 @@
-use bitvec::{BitArr, array::BitArray};
+use bitvec::{array::BitArray, order::Lsb0};
 use std::fmt::Debug;
 use std::ops::Index;
 
-use super::{PlaceStoneError, Player};
+use super::{PlaceStoneError, Player, pos::BoardSize};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
-pub struct Board<const BOARD_SIZE: usize>
+pub struct Board<BS: BoardSize>
 where
-    [(); bitvec::mem::elts::<usize>(2 * BOARD_SIZE * BOARD_SIZE)]:,
+    [(); bitvec::mem::elts::<usize>(2 * <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE)]:,
 {
     /// (x=0, y=0) origin is the top-left corner of the board
     /// cells[2 * (BOARD_SIZE*y+ )] is true if the cell at (x, y) is occupied.
     /// cells[2 * (BOARD_SIZE*y+x) + 1] can only be set if (x, y) is occupied and is true if the cell at (x, y) is black, false for white.
-    cells: BitArr!(for 2*BOARD_SIZE*BOARD_SIZE),
+    cells: BitArray<
+        [usize; bitvec::mem::elts::<usize>(2 * <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE)],
+        Lsb0,
+    >,
 }
 
-impl<const BOARD_SIZE: usize> Debug for Board<BOARD_SIZE>
+impl<BS: BoardSize> Debug for Board<BS>
 where
-    [(); bitvec::mem::elts::<usize>(2 * BOARD_SIZE * BOARD_SIZE)]:,
+    [(); bitvec::mem::elts::<usize>(2 * <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE)]:,
 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "Board(")?;
-        for y in 0..BOARD_SIZE {
-            for x in 0..BOARD_SIZE {
+        for y in 0..<BS as BoardSize>::SIZE {
+            for x in 0..<BS as BoardSize>::SIZE {
                 let cell = self[(x, y)];
                 match cell {
                     Some(Player::Black) => write!(f, "● ")?,
@@ -37,9 +40,9 @@ where
     }
 }
 
-impl<const BOARD_SIZE: usize> Board<BOARD_SIZE>
+impl<BS: BoardSize> Board<BS>
 where
-    [(); bitvec::mem::elts::<usize>(2 * BOARD_SIZE * BOARD_SIZE)]:,
+    [(); bitvec::mem::elts::<usize>(2 * <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE)]:,
 {
     #[inline]
     pub fn new() -> Self {
@@ -98,10 +101,10 @@ where
     #[inline]
     const fn index(x: usize, y: usize) -> usize {
         assert!(
-            x < BOARD_SIZE && y < BOARD_SIZE,
+            x < <BS as BoardSize>::SIZE && y < <BS as BoardSize>::SIZE,
             "Coordinates out of bounds"
         );
-        2 * BOARD_SIZE * y + 2 * x
+        2 * <BS as BoardSize>::SIZE * y + 2 * x
     }
 
     #[cfg(test)]
@@ -109,13 +112,14 @@ where
     pub fn iter(&self) -> impl Iterator<Item = (usize, usize, Option<Player>)>
 // TODO + ExactSizeIterator
     {
-        (0..BOARD_SIZE).flat_map(move |y| (0..BOARD_SIZE).map(move |x| (x, y, self[(x, y)])))
+        (0..<BS as BoardSize>::SIZE)
+            .flat_map(move |y| (0..<BS as BoardSize>::SIZE).map(move |x| (x, y, self[(x, y)])))
     }
 }
 
-impl<const N: usize> Index<(usize, usize)> for Board<N>
+impl<BS: BoardSize> Index<(usize, usize)> for Board<BS>
 where
-    [(); bitvec::mem::elts::<usize>(2 * N * N)]:,
+    [(); bitvec::mem::elts::<usize>(2 * <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE)]:,
 {
     type Output = Option<Player>;
 
@@ -134,14 +138,15 @@ where
     }
 }
 
-pub fn parse_board_from_string<const N: usize>(input: &str) -> Result<Board<N>, String>
+#[cfg(test)]
+pub fn parse_board_from_string<BS: BoardSize>(input: &str) -> Result<Board<BS>, String>
 where
-    [(); bitvec::mem::elts::<usize>(2 * N * N)]:,
+    [(); bitvec::mem::elts::<usize>(2 * <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE)]:,
 {
-    let mut board = Board::<N>::new();
+    let mut board = Board::<BS>::new();
     let mut input = input.chars().peekable();
-    for y in 0..N {
-        for x in 0..N {
+    for y in 0..<BS as BoardSize>::SIZE {
+        for x in 0..<BS as BoardSize>::SIZE {
             trim_whitespaces(&mut input);
             let cell_value = match input.next() {
                 Some('_') => None,
@@ -166,6 +171,7 @@ where
     Ok(board)
 }
 
+#[cfg(test)]
 fn trim_whitespaces(input: &mut std::iter::Peekable<std::str::Chars>) {
     while let Some(&c) = input.peek() {
         if c.is_whitespace() {
@@ -178,20 +184,20 @@ fn trim_whitespaces(input: &mut std::iter::Peekable<std::str::Chars>) {
 
 #[cfg(test)]
 mod tests {
-    use crate::board::Player;
+    use crate::board::{BoardSize9x9, BoardSize13x13, BoardSize19x19, Player};
 
     use super::*;
 
     #[test]
     fn memory_size() {
-        assert_eq!(96, std::mem::size_of::<Board<19>>());
-        assert_eq!(48, std::mem::size_of::<Board<13>>());
-        assert_eq!(24, std::mem::size_of::<Board<9>>());
+        assert_eq!(96, std::mem::size_of::<Board<BoardSize19x19>>());
+        assert_eq!(48, std::mem::size_of::<Board<BoardSize13x13>>());
+        assert_eq!(24, std::mem::size_of::<Board<BoardSize9x9>>());
     }
 
     #[test]
     fn empty_board() {
-        let board = Board::<13>::new();
+        let board = Board::<BoardSize13x13>::new();
         for y in 0..13 {
             for x in 0..13 {
                 assert_eq!(board[(x, y)], None, "Cell ({}, {}) should be empty", x, y);
@@ -207,7 +213,7 @@ mod tests {
 
     #[test]
     fn set_and_get_cells() {
-        let mut board = Board::<13>::new();
+        let mut board = Board::<BoardSize13x13>::new();
 
         board.set(0, 0, Some(Player::White));
         assert_eq!(board[(0, 0)], Some(Player::White));
@@ -234,6 +240,8 @@ mod tests {
     }
 
     mod parse_board_from_string {
+        use crate::board::BoardSize3x3;
+
         use super::*;
 
         #[test]
@@ -243,7 +251,7 @@ mod tests {
                 ○ ● ●
                 ○ _ ○
             "#;
-            let board = parse_board_from_string::<3>(input).unwrap();
+            let board = parse_board_from_string::<BoardSize3x3>(input).unwrap();
             assert_eq!(board[(0, 0)], None);
             assert_eq!(board[(0, 1)], Some(Player::Black));
             assert_eq!(board[(0, 2)], Some(Player::Black));

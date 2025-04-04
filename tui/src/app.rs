@@ -1,11 +1,12 @@
 use crossterm::event::{Event, KeyCode};
+use go_game::BoardSize9x9;
 use ratatui::Frame;
 
 use crate::game_widget::GameWidget;
 
 pub struct App {
     // TODO Offer larger board sizes
-    game: GameWidget<9>,
+    game: GameWidget<BoardSize9x9>,
 
     should_exit: bool,
 }

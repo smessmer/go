@@ -1,4 +1,4 @@
-use go_game::{Game, Player};
+use go_game::{BoardSize, Game, Player};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -9,19 +9,19 @@ use ratatui::{
 
 use crate::board_widget::BoardWidget;
 
-pub struct GameWidget<const BOARD_SIZE: usize>
+pub struct GameWidget<BS: BoardSize>
 where
-    [(); bitvec::mem::elts::<usize>(2 * BOARD_SIZE * BOARD_SIZE)]:,
-    [(); BOARD_SIZE * BOARD_SIZE]:,
+    [(); bitvec::mem::elts::<usize>(2 * <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE)]:,
+    [(); <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE]:,
 {
-    game: Game<BOARD_SIZE>,
+    game: Game<BS>,
     current_pos: (usize, usize),
 }
 
-impl<const BOARD_SIZE: usize> GameWidget<BOARD_SIZE>
+impl<BS: BoardSize> GameWidget<BS>
 where
-    [(); bitvec::mem::elts::<usize>(2 * BOARD_SIZE * BOARD_SIZE)]:,
-    [(); BOARD_SIZE * BOARD_SIZE]:,
+    [(); bitvec::mem::elts::<usize>(2 * <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE)]:,
+    [(); <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE]:,
 {
     pub fn new() -> Self {
         Self {
@@ -31,7 +31,7 @@ where
     }
 
     pub fn move_right(&mut self) {
-        if self.current_pos.0 < BOARD_SIZE - 1 {
+        if self.current_pos.0 < <BS as BoardSize>::SIZE - 1 {
             self.current_pos.0 += 1;
         }
     }
@@ -49,7 +49,7 @@ where
     }
 
     pub fn move_down(&mut self) {
-        if self.current_pos.1 < BOARD_SIZE - 1 {
+        if self.current_pos.1 < <BS as BoardSize>::SIZE - 1 {
             self.current_pos.1 += 1;
         }
     }
@@ -60,10 +60,10 @@ where
     }
 }
 
-impl<const BOARD_SIZE: usize> Widget for &GameWidget<BOARD_SIZE>
+impl<BS: BoardSize> Widget for &GameWidget<BS>
 where
-    [(); bitvec::mem::elts::<usize>(2 * BOARD_SIZE * BOARD_SIZE)]:,
-    [(); BOARD_SIZE * BOARD_SIZE]:,
+    [(); bitvec::mem::elts::<usize>(2 * <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE)]:,
+    [(); <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE]:,
 {
     fn render(self, area: Rect, buf: &mut Buffer) {
         let title = Line::from(" Go Board ".bold());
@@ -72,14 +72,14 @@ where
             format!(
                 "{}: {}",
                 player_name(Player::Black),
-                self.game.num_captured_by(Player::Black)
+                self.game.num_captured_by(Player::Black).into_usize()
             )
             .yellow(),
             " | ".into(),
             format!(
                 "{}: {}",
                 player_name(Player::White),
-                self.game.num_captured_by(Player::White)
+                self.game.num_captured_by(Player::White).into_usize()
             )
             .yellow(),
         ]);
