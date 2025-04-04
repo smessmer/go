@@ -1,4 +1,4 @@
-use derive_more::{Debug, Display, Error};
+use derive_more::{Debug, Display};
 use derive_where::derive_where;
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
@@ -199,10 +199,4 @@ impl<BS: BoardSize> std::fmt::Display for Pos<BS> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}/{}", self.x(), self.y())
     }
-}
-
-#[derive(Error, Display, Debug)]
-pub enum PosError {
-    /// Cannot move position because we're at the edge
-    AtEdge,
 }
