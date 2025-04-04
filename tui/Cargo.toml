@@ -11,3 +11,5 @@ color-eyre.workspace = true
 crossterm.workspace = true
 bitvec.workspace = true
 actually_beep.workspace = true
+tui-logger.workspace = true
+log.workspace = true

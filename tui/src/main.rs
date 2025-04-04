@@ -6,6 +6,9 @@ use go_tui::App;
 use ratatui::DefaultTerminal;
 
 fn main() -> Result<()> {
+    tui_logger::init_logger(log::LevelFilter::Trace).unwrap();
+    tui_logger::set_default_level(log::LevelFilter::Info);
+
     color_eyre::install()?;
     let terminal = ratatui::init();
     let result = run(terminal);

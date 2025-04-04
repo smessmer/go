@@ -2,6 +2,9 @@ use actually_beep::beep_with_hz_and_millis;
 use crossterm::event::{Event, KeyCode};
 use go_game::BoardSize9x9;
 use ratatui::Frame;
+use ratatui::layout::{Constraint, Direction, Layout};
+use ratatui::widgets::Block;
+use tui_logger::TuiLoggerWidget;
 
 use crate::game_widget::GameWidget;
 
@@ -45,11 +48,32 @@ impl App {
                         self.game.move_down();
                     }
                     KeyCode::Char('p') => {
+                        let player = self.game.current_player();
                         self.game.pass_turn();
+                        log::info!("{player}: pass turn");
                     }
                     KeyCode::Enter | KeyCode::Char(' ') => {
-                        if let Err(e) = self.game.place_stone() {
-                            beep_with_hz_and_millis(200, 75).unwrap();
+                        let player = self.game.current_player();
+                        let current_pos = self.game.current_pos();
+                        match self.game.place_stone() {
+                            Ok(()) => {
+                                log::info!(
+                                    // TODO Should the origin be bottom left or top left of the board?
+                                    "{player}: placed stone at {}/{}",
+                                    current_pos.0,
+                                    current_pos.1
+                                );
+                            }
+                            Err(e) => {
+                                log::error!(
+                                    // TODO Same here, which origin?
+                                    "{player}: Failed to place stone at {}/{}: {:?}",
+                                    current_pos.0,
+                                    current_pos.1,
+                                    e
+                                );
+                                beep_with_hz_and_millis(200, 75).unwrap();
+                            }
                         }
                     }
                     _ => (),
@@ -60,6 +84,14 @@ impl App {
     }
 
     pub fn draw(&self, frame: &mut Frame) {
-        frame.render_widget(&self.game, frame.area())
+        let layout = Layout::default()
+            .direction(Direction::Vertical)
+            .constraints(vec![Constraint::Percentage(80), Constraint::Percentage(20)])
+            .split(frame.area());
+        frame.render_widget(&self.game, layout[0]);
+        frame.render_widget(
+            TuiLoggerWidget::default().block(Block::bordered().title("Log")),
+            layout[1],
+        );
     }
 }

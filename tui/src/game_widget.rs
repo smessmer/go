@@ -30,6 +30,14 @@ where
         }
     }
 
+    pub fn current_player(&self) -> Player {
+        self.game.current_player()
+    }
+
+    pub fn current_pos(&self) -> (usize, usize) {
+        self.current_pos
+    }
+
     pub fn move_right(&mut self) {
         if self.current_pos.0 < <BS as BoardSize>::SIZE - 1 {
             self.current_pos.0 += 1;
