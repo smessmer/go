@@ -1,4 +1,4 @@
-use derive_more::{Debug, Display};
+use derive_more::{Debug, Display, Error};
 use derive_where::derive_where;
 use std::ops::{Add, AddAssign, Sub, SubAssign};
 
@@ -110,19 +110,25 @@ impl<BS: BoardSize> SubAssign for NumStones<BS> {
     }
 }
 
-#[derive(Display)]
 #[derive_where(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Pos<BS: BoardSize> {
-    #[display("{}")]
     index: NumStones<BS>,
 }
 
 impl<BS: BoardSize> Pos<BS> {
     pub fn from_xy(x: usize, y: usize) -> Self {
+        assert!(
+            x < <BS as BoardSize>::SIZE && y < <BS as BoardSize>::SIZE,
+            "Coordinates out of bounds"
+        );
         Self::from_index(y * <BS as BoardSize>::SIZE + x)
     }
 
     pub fn from_index(index: usize) -> Self {
+        assert!(
+            index < <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE,
+            "Index out of bounds"
+        );
         Self {
             index: NumStones::<BS>::from_usize(index),
         }
@@ -131,4 +137,56 @@ impl<BS: BoardSize> Pos<BS> {
     pub fn index(&self) -> usize {
         self.index.into_usize()
     }
+
+    pub fn x(&self) -> usize {
+        self.index.into_usize() % <BS as BoardSize>::SIZE
+    }
+
+    pub fn y(&self) -> usize {
+        self.index.into_usize() / <BS as BoardSize>::SIZE
+    }
+
+    pub fn increment_x(&mut self) -> Result<(), PosError> {
+        if self.x() >= <BS as BoardSize>::SIZE - 1 {
+            return Err(PosError::AtEdge);
+        }
+        self.index += NumStones::ONE;
+        Ok(())
+    }
+
+    pub fn decrement_x(&mut self) -> Result<(), PosError> {
+        if self.x() == 0 {
+            return Err(PosError::AtEdge);
+        }
+        self.index -= NumStones::ONE;
+        Ok(())
+    }
+
+    pub fn increment_y(&mut self) -> Result<(), PosError> {
+        if self.y() >= <BS as BoardSize>::SIZE - 1 {
+            return Err(PosError::AtEdge);
+        }
+        self.index += NumStones::<BS>::from_usize(<BS as BoardSize>::SIZE);
+        Ok(())
+    }
+
+    pub fn decrement_y(&mut self) -> Result<(), PosError> {
+        if self.y() == 0 {
+            return Err(PosError::AtEdge);
+        }
+        self.index -= NumStones::<BS>::from_usize(<BS as BoardSize>::SIZE);
+        Ok(())
+    }
+}
+
+impl<BS: BoardSize> std::fmt::Display for Pos<BS> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}/{}", self.x(), self.y())
+    }
+}
+
+#[derive(Error, Display, Debug)]
+pub enum PosError {
+    /// Cannot move position because we're at the edge
+    AtEdge,
 }

@@ -1,4 +1,4 @@
-use go_game::{BoardSize, Game, Player};
+use go_game::{BoardSize, Game, Player, Pos};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -15,7 +15,7 @@ where
     [(); <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE]:,
 {
     game: Game<BS>,
-    current_pos: (usize, usize),
+    current_pos: Pos<BS>,
 }
 
 impl<BS: BoardSize> GameWidget<BS>
@@ -26,7 +26,7 @@ where
     pub fn new() -> Self {
         Self {
             game: Game::new(),
-            current_pos: (0, 0),
+            current_pos: Pos::from_xy(0, 0),
         }
     }
 
@@ -34,37 +34,28 @@ where
         self.game.current_player()
     }
 
-    pub fn current_pos(&self) -> (usize, usize) {
+    pub fn current_pos(&self) -> Pos<BS> {
         self.current_pos
     }
 
     pub fn move_right(&mut self) {
-        if self.current_pos.0 < <BS as BoardSize>::SIZE - 1 {
-            self.current_pos.0 += 1;
-        }
+        let _ = self.current_pos.increment_x();
     }
 
     pub fn move_left(&mut self) {
-        if self.current_pos.0 > 0 {
-            self.current_pos.0 -= 1;
-        }
+        let _ = self.current_pos.decrement_x();
     }
 
     pub fn move_up(&mut self) {
-        if self.current_pos.1 > 0 {
-            self.current_pos.1 -= 1;
-        }
+        let _ = self.current_pos.decrement_y();
     }
 
     pub fn move_down(&mut self) {
-        if self.current_pos.1 < <BS as BoardSize>::SIZE - 1 {
-            self.current_pos.1 += 1;
-        }
+        let _ = self.current_pos.increment_y();
     }
 
     pub fn place_stone(&mut self) -> Result<(), go_game::PlaceStoneError> {
-        self.game
-            .place_stone(self.current_pos.0, self.current_pos.1)
+        self.game.place_stone(self.current_pos)
     }
 
     pub fn pass_turn(&mut self) {

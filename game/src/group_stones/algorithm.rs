@@ -16,9 +16,9 @@ where
         for x in 0..<BS as BoardSize>::SIZE {
             // We have already assigned groups to all rows above and in our current row to all cells to the left.
             // We now need to find the group the cell at (x, y).
-            let current_stone = board[(x, y)];
-            let matches_left_stone = x > 0 && current_stone == board[(x - 1, y)];
-            let matches_top_stone = y > 0 && current_stone == board[(x, y - 1)];
+            let current_stone = board[Pos::from_xy(x, y)];
+            let matches_left_stone = x > 0 && current_stone == board[Pos::from_xy(x - 1, y)];
+            let matches_top_stone = y > 0 && current_stone == board[Pos::from_xy(x, y - 1)];
             let current_pos = Pos::from_xy(x, y);
             let group_for_current = match (matches_left_stone, matches_top_stone) {
                 (false, false) => {

@@ -60,8 +60,8 @@ where
         &self.board
     }
 
-    pub fn place_stone(&mut self, x: usize, y: usize) -> Result<(), PlaceStoneError> {
-        self.board.set_if_empty(x, y, self.current_player)?;
+    pub fn place_stone(&mut self, pos: Pos<BS>) -> Result<(), PlaceStoneError> {
+        self.board.set_if_empty(pos, self.current_player)?;
         self._update_analysis();
         self._take_prisoners();
         self.current_player = self.current_player.other_player();
@@ -110,7 +110,7 @@ where
             for x in 0..<BS as BoardSize>::SIZE {
                 if self.analysis.group_at(Pos::from_xy(x, y)) == group_to_capture {
                     // This stone is part of the captured group, remove it from the board
-                    self.board.set(x, y, None);
+                    self.board.set(Pos::from_xy(x, y), None);
                     num_captured += NumStones::ONE;
                 }
             }
@@ -136,7 +136,7 @@ mod tests {
         assert_eq!(
             game.board()
                 .iter()
-                .filter(|(_x, _y, cell)| cell.is_some())
+                .filter(|(_pos, cell)| cell.is_some())
                 .count(),
             0
         );
@@ -145,29 +145,29 @@ mod tests {
     #[test]
     fn test_place_stone_success() {
         let mut game = Game::<BoardSize13x13>::new();
-        assert!(game.place_stone(10, 5).is_ok());
-        assert_eq!(game.board()[(10, 5)], Some(Player::Black));
+        assert!(game.place_stone(Pos::from_xy(10, 5)).is_ok());
+        assert_eq!(game.board()[Pos::from_xy(10, 5)], Some(Player::Black));
         assert_eq!(game.current_player(), Player::White);
     }
 
     #[test]
     fn test_place_stone_on_occupied_space() {
         let mut game = Game::<BoardSize13x13>::new();
-        assert!(game.place_stone(10, 5).is_ok());
-        assert_eq!(game.board()[(10, 5)], Some(Player::Black));
+        assert!(game.place_stone(Pos::from_xy(10, 5)).is_ok());
+        assert_eq!(game.board[Pos::from_xy(10, 5)], Some(Player::Black));
         assert_eq!(game.current_player(), Player::White);
 
-        assert!(game.place_stone(10, 5).is_err());
-        assert_eq!(game.board()[(10, 5)], Some(Player::Black));
+        assert!(game.place_stone(Pos::from_xy(10, 5)).is_err());
+        assert_eq!(game.board()[Pos::from_xy(10, 5)], Some(Player::Black));
         assert_eq!(game.current_player(), Player::White);
     }
 
     #[test]
     fn test_alternating_players() {
         let mut game = Game::<BoardSize13x13>::new();
-        assert!(game.place_stone(0, 0).is_ok());
+        assert!(game.place_stone(Pos::from_xy(0, 0)).is_ok());
         assert_eq!(game.current_player(), Player::White);
-        assert!(game.place_stone(1, 1).is_ok());
+        assert!(game.place_stone(Pos::from_xy(1, 1)).is_ok());
         assert_eq!(game.current_player(), Player::Black);
     }
 
@@ -191,7 +191,7 @@ mod tests {
                 Player::White => NumStones::ZERO,
             },
         );
-        game.place_stone(0, 4).unwrap();
+        game.place_stone(Pos::from_xy(0, 4)).unwrap();
         let expected_new_board = parse_board_from_string::<BoardSize5x5>(
             r#"
             _ ● _ _ _
@@ -235,7 +235,7 @@ mod tests {
                 Player::White => NumStones::ZERO,
             },
         );
-        game.place_stone(2, 2).unwrap();
+        game.place_stone(Pos::from_xy(2, 2)).unwrap();
         let expected_new_board = parse_board_from_string::<BoardSize5x5>(
             r#"
             ○ ○ ○ ○ ○
@@ -279,7 +279,7 @@ mod tests {
                 Player::White => NumStones::ZERO,
             },
         );
-        game.place_stone(2, 2).unwrap();
+        game.place_stone(Pos::from_xy(2, 2)).unwrap();
         let expected_new_board = parse_board_from_string::<BoardSize5x5>(
             r#"
             ● ● ● ● ●

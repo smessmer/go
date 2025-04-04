@@ -68,11 +68,11 @@ where
 
         for y in 0..<BS as BoardSize>::SIZE {
             for x in 0..<BS as BoardSize>::SIZE {
-                if board.is_occupied(x, y) {
+                if board.is_occupied(Pos::from_xy(x, y)) {
                     // It's a filled cell. Remember the owner of this group
                     let group = pos_to_group.group_at(Pos::from_xy(x, y)).into_usize();
                     if liberties_and_owners[group].owner.is_none() {
-                        liberties_and_owners[group].owner = board[(x, y)];
+                        liberties_and_owners[group].owner = board[Pos::from_xy(x, y)];
                     }
                 } else {
                     // It's an empty cell. Any neighboring group that is occupied will get a liberty added.

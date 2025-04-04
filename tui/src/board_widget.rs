@@ -1,4 +1,4 @@
-use go_game::{Board, BoardSize};
+use go_game::{Board, BoardSize, Pos};
 use ratatui::{
     buffer::Buffer,
     layout::Rect,
@@ -12,7 +12,7 @@ where
     [(); bitvec::mem::elts::<usize>(2 * <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE)]:,
 {
     pub board: &'a Board<BS>,
-    pub current_pos: (usize, usize),
+    pub current_pos: Pos<BS>,
 }
 
 impl<'a, BS: BoardSize> Widget for &BoardWidget<'a, BS>
@@ -25,8 +25,8 @@ where
                 Line::from(
                     (0..<BS as BoardSize>::SIZE)
                         .map(|x| {
-                            let is_current_pos = self.current_pos == (x, y);
-                            let cell = self.board[(x, y)];
+                            let is_current_pos = self.current_pos == Pos::from_xy(x, y);
+                            let cell = self.board[Pos::from_xy(x, y)];
                             let cell_str = match cell {
                                 Some(go_game::Player::White) => "○ ", // white stone
                                 Some(go_game::Player::Black) => "● ", // black stone

@@ -2,7 +2,7 @@ use bitvec::{array::BitArray, order::Lsb0};
 use std::fmt::Debug;
 use std::ops::Index;
 
-use super::{PlaceStoneError, Player, pos::BoardSize};
+use super::{PlaceStoneError, Player, Pos, pos::BoardSize};
 
 #[derive(Clone, Copy, PartialEq, Eq)]
 pub struct Board<BS: BoardSize>
@@ -26,7 +26,7 @@ where
         writeln!(f, "Board(")?;
         for y in 0..<BS as BoardSize>::SIZE {
             for x in 0..<BS as BoardSize>::SIZE {
-                let cell = self[(x, y)];
+                let cell = self[Pos::from_xy(x, y)];
                 match cell {
                     Some(Player::Black) => write!(f, "● ")?,
                     Some(Player::White) => write!(f, "○ ")?,
@@ -51,10 +51,9 @@ where
         }
     }
 
-    // TODO Use Pos class in set and get and is_occupied
     #[inline]
-    pub fn set(&mut self, x: usize, y: usize, value: Option<Player>) {
-        let index = Self::index(x, y);
+    pub fn set(&mut self, pos: Pos<BS>, value: Option<Player>) {
+        let index = Self::index(pos);
         self._set(index, value);
     }
 
@@ -71,8 +70,8 @@ where
     }
 
     #[inline]
-    pub fn is_occupied(&self, x: usize, y: usize) -> bool {
-        self._is_occupied(Self::index(x, y))
+    pub fn is_occupied(&self, pos: Pos<BS>) -> bool {
+        self._is_occupied(Self::index(pos))
     }
 
     fn _is_occupied(&self, index: usize) -> bool {
@@ -84,13 +83,8 @@ where
     }
 
     #[inline]
-    pub fn set_if_empty(
-        &mut self,
-        x: usize,
-        y: usize,
-        value: Player,
-    ) -> Result<(), PlaceStoneError> {
-        let index = Self::index(x, y);
+    pub fn set_if_empty(&mut self, pos: Pos<BS>, value: Player) -> Result<(), PlaceStoneError> {
+        let index = Self::index(pos);
         if self._is_occupied(index) {
             return Err(PlaceStoneError::CellOccupied);
         }
@@ -100,34 +94,34 @@ where
     }
 
     #[inline]
-    const fn index(x: usize, y: usize) -> usize {
-        assert!(
-            x < <BS as BoardSize>::SIZE && y < <BS as BoardSize>::SIZE,
-            "Coordinates out of bounds"
-        );
-        // TODO Use Pos class
-        2 * <BS as BoardSize>::SIZE * y + 2 * x
+    fn index(pos: Pos<BS>) -> usize {
+        let pos_index = pos.index();
+        2 * pos_index
     }
 
     #[cfg(test)]
     #[inline]
-    pub fn iter(&self) -> impl Iterator<Item = (usize, usize, Option<Player>)>
+    pub fn iter(&self) -> impl Iterator<Item = (Pos<BS>, Option<Player>)>
 // TODO + ExactSizeIterator
     {
-        (0..<BS as BoardSize>::SIZE)
-            .flat_map(move |y| (0..<BS as BoardSize>::SIZE).map(move |x| (x, y, self[(x, y)])))
+        (0..<BS as BoardSize>::SIZE).flat_map(move |y| {
+            (0..<BS as BoardSize>::SIZE).map(move |x| {
+                let pos = Pos::from_xy(x, y);
+                (pos, self[pos])
+            })
+        })
     }
 }
 
-impl<BS: BoardSize> Index<(usize, usize)> for Board<BS>
+impl<BS: BoardSize> Index<Pos<BS>> for Board<BS>
 where
     [(); bitvec::mem::elts::<usize>(2 * <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE)]:,
 {
     type Output = Option<Player>;
 
     #[inline]
-    fn index(&self, (x, y): (usize, usize)) -> &Self::Output {
-        let index = Self::index(x, y);
+    fn index(&self, pos: Pos<BS>) -> &Self::Output {
+        let index = Self::index(pos);
         if self._is_occupied(index) {
             if self._is_black(index) {
                 &Some(Player::Black)
@@ -160,7 +154,7 @@ where
                     ));
                 }
             };
-            board.set(x, y, cell_value);
+            board.set(Pos::from_xy(x, y), cell_value);
         }
         trim_whitespaces(&mut input);
     }
@@ -202,9 +196,15 @@ mod tests {
         let board = Board::<BoardSize13x13>::new();
         for y in 0..13 {
             for x in 0..13 {
-                assert_eq!(board[(x, y)], None, "Cell ({}, {}) should be empty", x, y);
+                assert_eq!(
+                    board[Pos::from_xy(x, y)],
+                    None,
+                    "Cell ({}, {}) should be empty",
+                    x,
+                    y
+                );
                 assert!(
-                    !board.is_occupied(x, y),
+                    !board.is_occupied(Pos::from_xy(x, y)),
                     "Cell ({}, {}) should not be occupied",
                     x,
                     y,
@@ -217,20 +217,20 @@ mod tests {
     fn set_and_get_cells() {
         let mut board = Board::<BoardSize13x13>::new();
 
-        board.set(0, 0, Some(Player::White));
-        assert_eq!(board[(0, 0)], Some(Player::White));
+        board.set(Pos::from_xy(0, 0), Some(Player::White));
+        assert_eq!(board[Pos::from_xy(0, 0)], Some(Player::White));
 
-        board.set(10, 10, Some(Player::Black));
-        assert_eq!(board[(10, 10)], Some(Player::Black));
+        board.set(Pos::from_xy(10, 10), Some(Player::Black));
+        assert_eq!(board[Pos::from_xy(10, 10)], Some(Player::Black));
 
-        board.set(12, 8, Some(Player::White));
-        assert_eq!(board[(12, 8)], Some(Player::White));
+        board.set(Pos::from_xy(12, 8), Some(Player::White));
+        assert_eq!(board[Pos::from_xy(12, 8)], Some(Player::White));
 
         for y in 0..13 {
             for x in 0..13 {
                 if (x, y) != (0, 0) && (x, y) != (10, 10) && (x, y) != (12, 8) {
                     assert_eq!(
-                        board[(x, y)],
+                        board[Pos::from_xy(x, y)],
                         None,
                         "Cell ({}, {}) should still be empty",
                         x,
@@ -254,15 +254,15 @@ mod tests {
                 ○ _ ○
             "#;
             let board = parse_board_from_string::<BoardSize3x3>(input).unwrap();
-            assert_eq!(board[(0, 0)], None);
-            assert_eq!(board[(0, 1)], Some(Player::Black));
-            assert_eq!(board[(0, 2)], Some(Player::Black));
-            assert_eq!(board[(1, 0)], Some(Player::Black));
-            assert_eq!(board[(1, 1)], Some(Player::White));
-            assert_eq!(board[(1, 2)], None);
-            assert_eq!(board[(2, 0)], Some(Player::Black));
-            assert_eq!(board[(2, 1)], Some(Player::White));
-            assert_eq!(board[(2, 2)], Some(Player::Black));
+            assert_eq!(board[Pos::from_xy(0, 0)], None);
+            assert_eq!(board[Pos::from_xy(0, 1)], Some(Player::Black));
+            assert_eq!(board[Pos::from_xy(0, 2)], Some(Player::Black));
+            assert_eq!(board[Pos::from_xy(1, 0)], Some(Player::Black));
+            assert_eq!(board[Pos::from_xy(1, 1)], Some(Player::White));
+            assert_eq!(board[Pos::from_xy(1, 2)], None);
+            assert_eq!(board[Pos::from_xy(2, 0)], Some(Player::Black));
+            assert_eq!(board[Pos::from_xy(2, 1)], Some(Player::White));
+            assert_eq!(board[Pos::from_xy(2, 2)], Some(Player::Black));
         }
     }
 }

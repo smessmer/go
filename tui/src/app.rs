@@ -59,17 +59,15 @@ impl App {
                             Ok(()) => {
                                 log::info!(
                                     // TODO Should the origin be bottom left or top left of the board?
-                                    "{player}: placed stone at {}/{}",
-                                    current_pos.0,
-                                    current_pos.1
+                                    "{player}: placed stone at {}",
+                                    current_pos,
                                 );
                             }
                             Err(e) => {
                                 log::error!(
                                     // TODO Same here, which origin?
-                                    "{player}: Failed to place stone at {}/{}: {:?}",
-                                    current_pos.0,
-                                    current_pos.1,
+                                    "{player}: Failed to place stone at {}: {:?}",
+                                    current_pos,
                                     e
                                 );
                                 beep_with_hz_and_millis(200, 75).unwrap();
