@@ -3,7 +3,9 @@
 mod analysis;
 mod board;
 mod game;
+mod gamelog;
 mod group_stones;
+mod sgf_parser;
 mod utils;
 
 pub use board::{
@@ -11,6 +13,7 @@ pub use board::{
     Player, Pos,
 };
 pub use game::Game;
+pub use sgf_parser::{Move, Outcome, OutcomeMargin, parse_sgf};
 
 #[cfg(test)]
 mod testutils;
