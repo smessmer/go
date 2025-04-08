@@ -13,7 +13,7 @@ pub use board::{
     Player, Pos,
 };
 pub use game::Game;
-pub use sgf_parser::{Move, Outcome, OutcomeMargin, parse_sgf};
+pub use sgf_parser::{Move, Outcome, OutcomeMargin, SgfGame, parse_sgf};
 
 #[cfg(test)]
 mod testutils;

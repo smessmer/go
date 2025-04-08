@@ -111,6 +111,35 @@ where
             })
         })
     }
+
+    pub fn from_str(input: &str) -> Result<Self, String> {
+        let mut board = Board::<BS>::new();
+        let mut input = input.chars().peekable();
+        for y in 0..<BS as BoardSize>::SIZE {
+            for x in 0..<BS as BoardSize>::SIZE {
+                trim_whitespaces(&mut input);
+                let cell_value = match input.next() {
+                    Some('_') => None,
+                    Some('○') => Some(Player::Black),
+                    Some('●') => Some(Player::White),
+                    char => {
+                        return Err(format!(
+                            "Invalid input format: expected '○' for black, '●' for white, or ' ' for empty cell but got {char:?}",
+                        ));
+                    }
+                };
+                board.set(Pos::from_xy(x, y), cell_value);
+            }
+            trim_whitespaces(&mut input);
+        }
+        trim_whitespaces(&mut input);
+        if let Some(char) = input.next() {
+            return Err(format!(
+                "Invalid input format: extra characters found after board: {char:?}"
+            ));
+        }
+        Ok(board)
+    }
 }
 
 impl<BS: BoardSize> Index<Pos<BS>> for Board<BS>
@@ -134,40 +163,6 @@ where
     }
 }
 
-#[cfg(test)]
-pub fn parse_board_from_string<BS: BoardSize>(input: &str) -> Result<Board<BS>, String>
-where
-    [(); bitvec::mem::elts::<usize>(2 * <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE)]:,
-{
-    let mut board = Board::<BS>::new();
-    let mut input = input.chars().peekable();
-    for y in 0..<BS as BoardSize>::SIZE {
-        for x in 0..<BS as BoardSize>::SIZE {
-            trim_whitespaces(&mut input);
-            let cell_value = match input.next() {
-                Some('_') => None,
-                Some('○') => Some(Player::Black),
-                Some('●') => Some(Player::White),
-                char => {
-                    return Err(format!(
-                        "Invalid input format: expected '○' for black, '●' for white, or ' ' for empty cell but got {char:?}",
-                    ));
-                }
-            };
-            board.set(Pos::from_xy(x, y), cell_value);
-        }
-        trim_whitespaces(&mut input);
-    }
-    trim_whitespaces(&mut input);
-    if let Some(char) = input.next() {
-        return Err(format!(
-            "Invalid input format: extra characters found after board: {char:?}"
-        ));
-    }
-    Ok(board)
-}
-
-#[cfg(test)]
 fn trim_whitespaces(input: &mut std::iter::Peekable<std::str::Chars>) {
     while let Some(&c) = input.peek() {
         if c.is_whitespace() {
@@ -253,7 +248,7 @@ mod tests {
                 ○ ● ●
                 ○ _ ○
             "#;
-            let board = parse_board_from_string::<BoardSize3x3>(input).unwrap();
+            let board = Board::<BoardSize3x3>::from_str(input).unwrap();
             assert_eq!(board[Pos::from_xy(0, 0)], None);
             assert_eq!(board[Pos::from_xy(0, 1)], Some(Player::Black));
             assert_eq!(board[Pos::from_xy(0, 2)], Some(Player::Black));

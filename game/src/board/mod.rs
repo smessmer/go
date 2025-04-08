@@ -4,8 +4,6 @@ mod player;
 mod pos;
 
 pub use board::Board;
-#[cfg(test)]
-pub use board::parse_board_from_string;
 pub use error::PlaceStoneError;
 pub use player::Player;
 pub use pos::{

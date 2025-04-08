@@ -274,6 +274,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "common_macros"
+version = "0.1.1"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "f3f6d59c71e7dc3af60f0af9db32364d96a16e9310f3f5db2b55ed642162dd35"
+
+[[package]]
 name = "compact_str"
 version = "0.8.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -543,6 +549,7 @@ version = "0.1.1"
 dependencies = [
  "anyhow",
  "bitvec",
+ "common_macros",
  "derive-where",
  "derive_more",
  "enum-map",

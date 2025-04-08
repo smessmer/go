@@ -67,7 +67,7 @@ mod tests {
     use std::collections::HashSet;
 
     use crate::{
-        board::{BoardSize5x5, BoardSize7x7, parse_board_from_string},
+        board::{BoardSize5x5, BoardSize7x7},
         group_stones::group_id::GroupId,
         testutils,
     };
@@ -76,7 +76,7 @@ mod tests {
 
     #[test]
     fn empty_board() {
-        let board = parse_board_from_string::<BoardSize5x5>(
+        let board = Board::<BoardSize5x5>::from_str(
             r#"
             _ _ _ _ _
             _ _ _ _ _
@@ -102,7 +102,7 @@ mod tests {
 
     #[test]
     fn board_filled_with_black() {
-        let board = parse_board_from_string::<BoardSize5x5>(
+        let board = Board::<BoardSize5x5>::from_str(
             r#"
             ● ● ● ● ●
             ● ● ● ● ●
@@ -128,7 +128,7 @@ mod tests {
 
     #[test]
     fn single_stone() {
-        let board = parse_board_from_string::<BoardSize5x5>(
+        let board = Board::<BoardSize5x5>::from_str(
             r#"
             _ _ _ _ _
             _ _ _ _ _
@@ -198,7 +198,7 @@ mod tests {
 
     #[test]
     fn more_complicated_board() {
-        let board = parse_board_from_string::<BoardSize5x5>(
+        let board = Board::<BoardSize5x5>::from_str(
             r#"
             _ ● _ ○ ○
             ● ● ○ _ _
@@ -226,7 +226,7 @@ mod tests {
     fn test_merging_groups() {
         // The algorithm goes top-bottom and each row left-right. Let's test a scenario where that causes it to first assign different groups
         // but later merge them when it finds a connection.
-        let board = parse_board_from_string::<BoardSize7x7>(
+        let board = Board::<BoardSize7x7>::from_str(
             // This board is crafted so no matter which direction we go, it'll have to merge groups later
             // * outer loop top-bottom or bottom-top (symmetric), inner loop left-right or right-left (symmetric): black stones will have to be merged
             // * outer loop left-right or right-left (symmetric), inner loop top-bottom or bottom-top (symmetric): white stones will have to be merged

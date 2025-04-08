@@ -123,7 +123,7 @@ where
 
 #[cfg(test)]
 mod tests {
-    use crate::board::{BoardSize5x5, BoardSize13x13, parse_board_from_string};
+    use crate::board::{BoardSize5x5, BoardSize13x13};
 
     use super::*;
 
@@ -171,7 +171,7 @@ mod tests {
 
     #[test]
     fn test_place_stone_and_take_prisoners() {
-        let board = parse_board_from_string::<BoardSize5x5>(
+        let board = Board::<BoardSize5x5>::from_str(
             r#"
             _ ● ○ ○ ○
             ● ● ○ ● ●
@@ -190,7 +190,7 @@ mod tests {
             },
         );
         game.place_stone(Pos::from_xy(0, 4)).unwrap();
-        let expected_new_board = parse_board_from_string::<BoardSize5x5>(
+        let expected_new_board = Board::<BoardSize5x5>::from_str(
             r#"
             _ ● _ _ _
             ● ● _ ● ●
@@ -215,7 +215,7 @@ mod tests {
 
     #[test]
     fn capture_opponent_before_capturing_self_black_moves() {
-        let board = parse_board_from_string::<BoardSize5x5>(
+        let board = Board::<BoardSize5x5>::from_str(
             r#"
             ○ ○ ○ ○ ○
             ○ ● ● ● ○
@@ -234,7 +234,7 @@ mod tests {
             },
         );
         game.place_stone(Pos::from_xy(2, 2)).unwrap();
-        let expected_new_board = parse_board_from_string::<BoardSize5x5>(
+        let expected_new_board = Board::<BoardSize5x5>::from_str(
             r#"
             ○ ○ ○ ○ ○
             ○ _ _ _ ○
@@ -259,7 +259,7 @@ mod tests {
 
     #[test]
     fn capture_opponent_before_capturing_self_white_moves() {
-        let board = parse_board_from_string::<BoardSize5x5>(
+        let board = Board::<BoardSize5x5>::from_str(
             r#"
             ● ● ● ● ●
             ● ○ ○ ○ ●
@@ -278,7 +278,7 @@ mod tests {
             },
         );
         game.place_stone(Pos::from_xy(2, 2)).unwrap();
-        let expected_new_board = parse_board_from_string::<BoardSize5x5>(
+        let expected_new_board = Board::<BoardSize5x5>::from_str(
             r#"
             ● ● ● ● ●
             ● _ _ _ ●

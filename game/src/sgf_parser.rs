@@ -1,12 +1,32 @@
 use anyhow::{Context, Result, anyhow, bail, ensure};
-use sgf_parse::{SgfParseError, go::Prop};
+use sgf_parse::go::Prop;
 
-use crate::Player;
+use crate::{BoardSize19x19, Game, Player, Pos};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SgfGame {
     pub outcome: Outcome,
     pub moves: Vec<Move>,
+}
+
+impl SgfGame {
+    pub fn game_after_move_index(&self, move_index: usize) -> Result<Game<BoardSize19x19>> {
+        let mut game = Game::new();
+        let mut moves = self.moves.iter();
+        for i in 0..move_index {
+            match moves.next() {
+                None => panic!("Expected {move_index} moves but only saw {i}"),
+                Some(Move::Pass) => {
+                    game.pass_turn();
+                }
+                Some(Move::Place { x, y }) => {
+                    game.place_stone(Pos::from_xy(usize::from(*x), usize::from(*y)))
+                        .unwrap();
+                }
+            }
+        }
+        Ok(game)
+    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]

@@ -24,6 +24,7 @@ tui-logger = "^0.17.0"
 log = "^0.4.27"
 sgf-parse = "^4.2.2"
 itertools = "^0.14.0"
+common_macros = "^0.1.1"
 
 [profile.release]
 lto = "fat"

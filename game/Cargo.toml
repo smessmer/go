@@ -13,3 +13,4 @@ derive-where.workspace = true
 sgf-parse.workspace = true
 anyhow.workspace = true
 itertools.workspace = true
+common_macros.workspace = true
