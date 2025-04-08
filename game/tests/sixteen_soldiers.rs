@@ -3,7 +3,7 @@
 // From https://senseis.xmp.net/?SixteenSoldiers
 
 use common_macros::hash_map;
-use go_game::{Board, BoardSize19x19, Game, Move, Pos, SgfGame, parse_sgf};
+use go_game::{Board, parse_sgf};
 
 const GAME_SGF: &str = include_str!("sixteen_soldiers.sgf");
 

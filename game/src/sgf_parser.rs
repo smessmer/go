@@ -174,18 +174,6 @@ fn single<I>(mut iter: impl Iterator<Item = I>) -> Result<I> {
     }
 }
 
-fn single_opt<I>(mut iter: impl Iterator<Item = I>) -> Result<Option<I>> {
-    iter.next()
-        .map(|result| {
-            if iter.next().is_none() {
-                Ok(result)
-            } else {
-                Err(anyhow!("More than one element found"))
-            }
-        })
-        .transpose()
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;

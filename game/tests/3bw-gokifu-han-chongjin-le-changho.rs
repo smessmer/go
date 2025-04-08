@@ -3,7 +3,7 @@
 // From http://gokifu.com/ , 2025-04-06, Han Chongjin against Le Changho, W+1.5
 
 use common_macros::hash_map;
-use go_game::{Board, BoardSize19x19, Game, Move, Pos, SgfGame, parse_sgf};
+use go_game::{Board, parse_sgf};
 use pretty_assertions::assert_eq;
 
 const GAME_SGF: &str = include_str!("3bw-gokifu-han-chongjin-le-changho.sgf");

@@ -4,7 +4,7 @@
 // This is a game with a group capture of more than one stone
 
 use common_macros::hash_map;
-use go_game::{Board, BoardSize19x19, Game, Move, Pos, SgfGame, parse_sgf};
+use go_game::{Board, parse_sgf};
 use pretty_assertions::assert_eq;
 
 const GAME_SGF: &str = include_str!("3bw-lee-changseok-park-jungwhan.sgf");
