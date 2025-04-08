@@ -147,7 +147,7 @@ pub fn parse_sgf(sgf: &str) -> Result<SgfGame> {
             bail!("Node has neither a B nor a W property");
         }
 
-        match single_opt(current_node.children())? {
+        match current_node.children().next() {
             Some(next_node) => current_node = next_node,
             None => break,
         }
