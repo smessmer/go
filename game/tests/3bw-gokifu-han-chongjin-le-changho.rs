@@ -6,7 +6,7 @@ use common_macros::hash_map;
 use go_game::{Board, BoardSize19x19, Game, Move, Pos, SgfGame, parse_sgf};
 use pretty_assertions::assert_eq;
 
-const GAME_SGF: &str = include_str!("3bw-gokifu.sgf");
+const GAME_SGF: &str = include_str!("3bw-gokifu-han-chongjin-le-changho.sgf");
 
 #[test]
 fn game_3bw_gokifu() {
