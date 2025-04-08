@@ -5,6 +5,7 @@ use crate::{BoardSize19x19, Game, Player, Pos};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct SgfGame {
+    // TODO In our integration tests, test that we're getting to the same outcome if the outcome is by points.
     pub outcome: Outcome,
     pub moves: Vec<Move>,
 }
