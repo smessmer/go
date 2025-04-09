@@ -7,6 +7,8 @@ use crate::{
     utils::SmallSet,
 };
 
+// TODO In any of our Pos::all_positions iterators, can we use flood fill to make it faster and only look at closeby positions?
+
 #[derive_where(Debug, Clone, Copy, PartialEq, Eq)]
 pub enum GroupInfo<BS: BoardSize> {
     PlayerGroup {
