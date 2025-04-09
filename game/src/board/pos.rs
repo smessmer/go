@@ -51,10 +51,8 @@ impl BoardSize for BoardSize19x19 {
     type Index = u16; // Using u8 for 19x19 board, since 19*19=361 doesn't fit in u8
 }
 
-#[derive(Display)]
-#[derive_where(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive_where(Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct NumStones<BS: BoardSize> {
-    #[display("{}")]
     num: BS::Index,
 }
 
@@ -75,6 +73,18 @@ impl<BS: BoardSize> NumStones<BS> {
 
     pub fn into_usize(&self) -> usize {
         self.num.into()
+    }
+}
+
+impl<BS: BoardSize> std::fmt::Display for NumStones<BS> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{:?}", self.num)
+    }
+}
+
+impl<BS: BoardSize> std::fmt::Debug for NumStones<BS> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self)
     }
 }
 
@@ -110,7 +120,7 @@ impl<BS: BoardSize> SubAssign for NumStones<BS> {
     }
 }
 
-#[derive_where(Debug, Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
+#[derive_where(Default, Clone, Copy, PartialEq, Eq, PartialOrd, Ord, Hash)]
 pub struct Pos<BS: BoardSize> {
     index: NumStones<BS>,
 }
@@ -198,5 +208,11 @@ impl<BS: BoardSize> Pos<BS> {
 impl<BS: BoardSize> std::fmt::Display for Pos<BS> {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}/{}", self.x(), self.y())
+    }
+}
+
+impl<BS: BoardSize> std::fmt::Debug for Pos<BS> {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        write!(f, "{}", self)
     }
 }
