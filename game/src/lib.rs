@@ -14,6 +14,7 @@ pub use board::{
 };
 pub use game::Game;
 pub use sgf_parser::{Move, Outcome, OutcomeMargin, SgfGame, parse_sgf};
+pub use utils::SmallSet;
 
 #[cfg(test)]
 mod testutils;

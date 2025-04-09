@@ -16,7 +16,6 @@ derive_more = {version = "^2.0.1", features = ["error", "display"]}
 ratatui = "^0.29.0"
 color-eyre = "^0.6.3"
 crossterm = "^0.28.1"
-smallset = "^0.1.1"
 enum-map = "^2.7.3"
 derive-where = "^1.2.7"
 actually_beep = "^0.1.1"
@@ -27,6 +26,7 @@ itertools = "^0.14.0"
 common_macros = "^0.1.1"
 pretty_assertions = "^1.4.1"
 criterion = "^0.5.1"
+smallvec = "^1.15.0"
 
 [profile.release]
 lto = "fat"

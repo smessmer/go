@@ -700,7 +700,7 @@ dependencies = [
  "itertools 0.14.0",
  "pretty_assertions",
  "sgf-parse",
- "smallset",
+ "smallvec",
 ]
 
 [[package]]
@@ -1145,7 +1145,7 @@ dependencies = [
  "cfg-if",
  "libc",
  "redox_syscall",
- "smallvec 1.14.0",
+ "smallvec",
  "windows-targets 0.52.6",
 ]
 
@@ -1459,25 +1459,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "smallset"
-version = "0.1.1"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "f428a8707c0e10637f43f8065377cae75407eba742609d08f2b2b398ad8ef99a"
-dependencies = [
- "smallvec 0.1.8",
-]
-
-[[package]]
 name = "smallvec"
-version = "0.1.8"
+version = "1.15.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "fcc8d19212aacecf95e4a7a2179b26f7aeb9732a915cf01f05b0d3e044865410"
-
-[[package]]
-name = "smallvec"
-version = "1.14.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7fcf8323ef1faaee30a44a340193b1ac6814fd9b7b4e88e9d4519a3e4abe1cfd"
+checksum = "8917285742e9f3e1683f0a9c4e6b57960b7314d0b08d30d1ecd426713ee2eee9"
 
 [[package]]
 name = "static_assertions"

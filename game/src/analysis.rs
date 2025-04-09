@@ -1,10 +1,10 @@
 use derive_where::derive_where;
-use smallset::SmallSet;
 
 use crate::{
     Board, BoardSize, NumStones, Player,
     board::Pos,
     group_stones::{GroupId, GroupedStones, group_connected_stones},
+    utils::SmallSet,
 };
 
 #[derive_where(Debug, Clone, Copy, PartialEq, Eq)]
