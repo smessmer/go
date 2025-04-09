@@ -64,46 +64,39 @@ where
                 // Remove the stone
                 on_remove(pos);
 
-                // TODO Factor this out into a GroupSet or something
-                // TODO What smallset size? Or maybe just a bitset?
-                let mut groups_to_add_liberty_to = SmallSet::<[GroupId<BS>; 10]>::new();
-                // And give each neighboring stone a liberty
-                let mut add_liberty = |neighbor_pos: Option<Pos<BS>>| {
-                    if let Some(neighbor) = neighbor_pos {
-                        let neighbor_group = self.pos_to_group.group_at(neighbor);
-                        if neighbor_group != group_to_capture {
-                            match &mut self.group_info[neighbor_group.into_usize()] {
-                                GroupInfo::Unknown { .. } => {
-                                    panic!("Didn't expect an Unknown group after initialization");
-                                }
-                                GroupInfo::PlayerGroup { .. } => {
-                                    groups_to_add_liberty_to.insert(neighbor_group);
-                                }
-                                GroupInfo::EmptyStonesGroup => {
-                                    panic!(
-                                        "We captured a group that neighbors an empty group. Impossible."
-                                    );
-                                }
-                            }
-                        }
-                    }
-                };
-                add_liberty(pos.up());
-                add_liberty(pos.left());
-                add_liberty(pos.right());
-                add_liberty(pos.down());
-
-                for group in groups_to_add_liberty_to.iter() {
+                // And give each neighboring group a liberty
+                for group in self.find_neighboring_groups(pos).iter() {
                     match &mut self.group_info[group.into_usize()] {
                         GroupInfo::Unknown { .. } => unreachable!(),
                         GroupInfo::PlayerGroup { liberties, .. } => *liberties += NumStones::ONE,
                         GroupInfo::EmptyStonesGroup => {
-                            unreachable!();
+                            panic!(
+                                "We captured a group that neighbors an empty group. Impossible."
+                            );
                         }
                     }
                 }
             }
         }
+    }
+
+    fn find_neighboring_groups(&self, pos: Pos<BS>) -> SmallSet<[GroupId<BS>; 4]> {
+        let self_group = self.pos_to_group.group_at(pos);
+        let mut neighboring_groups = SmallSet::<[GroupId<BS>; 4]>::new();
+        let mut check_neighbor = |neighbor_pos: Option<Pos<BS>>| {
+            if let Some(neighbor) = neighbor_pos {
+                let neighbor_group = self.pos_to_group.group_at(neighbor);
+                if neighbor_group != self_group {
+                    neighboring_groups.insert(neighbor_group);
+                }
+            }
+        };
+        check_neighbor(pos.up());
+        check_neighbor(pos.left());
+        check_neighbor(pos.right());
+        check_neighbor(pos.down());
+
+        neighboring_groups
     }
 
     pub fn group_at(&self, pos: Pos<BS>) -> GroupId<BS> {
