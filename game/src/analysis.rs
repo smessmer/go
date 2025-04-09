@@ -28,9 +28,8 @@ where
     [(); bitvec::mem::elts::<usize>(2 * <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE)]:,
 {
     /// Mapping from board position to which group it belongs to
-    pos_to_group: GroupedStones<BS>,
+    pos_to_group: [GroupId<BS>; <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE],
 
-    // TODO pos_to_group stores the number of groups, which is also stored in group_info.len(). Can we remove it from pos_to_group?
     /// Some info for each group
     group_info: Vec<GroupInfo<BS>>,
 }
@@ -45,7 +44,7 @@ where
         let group_info = Self::_liberties_and_owners_of_groups(board, &pos_to_group);
 
         Self {
-            pos_to_group,
+            pos_to_group: pos_to_group.into(),
             group_info,
         }
     }
@@ -61,7 +60,7 @@ where
         self.group_info[group_to_capture.into_usize()] = GroupInfo::EmptyStonesGroup;
 
         for pos in Pos::all_positions() {
-            if self.pos_to_group.group_at(pos) == group_to_capture {
+            if self.group_at(pos) == group_to_capture {
                 // Remove the stone
                 on_remove(pos);
 
@@ -82,11 +81,11 @@ where
     }
 
     fn find_neighboring_groups(&self, pos: Pos<BS>) -> SmallSet<[GroupId<BS>; 4]> {
-        let self_group = self.pos_to_group.group_at(pos);
+        let self_group = self.group_at(pos);
         let mut neighboring_groups = SmallSet::<[GroupId<BS>; 4]>::new();
         let mut check_neighbor = |neighbor_pos: Option<Pos<BS>>| {
             if let Some(neighbor) = neighbor_pos {
-                let neighbor_group = self.pos_to_group.group_at(neighbor);
+                let neighbor_group = self.group_at(neighbor);
                 if neighbor_group != self_group {
                     neighboring_groups.insert(neighbor_group);
                 }
@@ -101,7 +100,7 @@ where
     }
 
     pub fn group_at(&self, pos: Pos<BS>) -> GroupId<BS> {
-        self.pos_to_group.group_at(pos)
+        self.pos_to_group[pos.index()]
     }
 
     fn _liberties_and_owners_of_groups(

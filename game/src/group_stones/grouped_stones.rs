@@ -34,4 +34,8 @@ where
     pub fn num_groups(&self) -> GroupId<BS> {
         self.num_groups
     }
+
+    pub fn into(self) -> [GroupId<BS>; <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE] {
+        self.pos_to_group
+    }
 }
