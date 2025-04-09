@@ -13,6 +13,7 @@ where
     [(); bitvec::mem::elts::<usize>(2 * <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE)]:,
     [(); <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE]:,
 {
+    // TODO analysis holds enough information to reconstruct the whole board. Is there any purpose in storing the board separately? Or can we just reconstruct it when needed?
     board: Board<BS>,
     current_player: Player,
     num_captured_by: EnumMap<Player, NumStones<BS>>,
