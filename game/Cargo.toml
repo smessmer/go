@@ -16,8 +16,8 @@ itertools.workspace = true
 common_macros.workspace = true
 
 [dev-dependencies]
-pretty_assertions.workspace = true
 criterion.workspace = true
+pretty_assertions.workspace = true
 
 [[bench]]
 name = "game"

@@ -84,7 +84,6 @@ where
         self._player_takes_prisoners(self.current_player);
 
         // Then take our own stones as prisoners
-        self.analysis.update_group_info(&self.board); // TODO it would be faster to just tell the analysis what stones we took away instead of recalculating all liberties
         let opponent = self.current_player.other_player();
         self._player_takes_prisoners(opponent);
     }
@@ -92,10 +91,12 @@ where
     fn _player_takes_prisoners(&mut self, player: Player) {
         let opponent = player.other_player();
         let mut groups_to_capture = Vec::new();
-        for (group, GroupInfo { owner, liberties }) in self.analysis.groups() {
-            if *owner == Some(opponent) && *liberties == NumStones::ZERO {
-                // This group has no liberties left, so it is captured
-                groups_to_capture.push(group);
+        for (group, group_info) in self.analysis.groups() {
+            if let GroupInfo::PlayerGroup { owner, liberties } = group_info {
+                if *owner == opponent && *liberties == NumStones::ZERO {
+                    // This group has no liberties left, so it is captured
+                    groups_to_capture.push(group);
+                }
             }
         }
         for group in groups_to_capture {
@@ -106,13 +107,13 @@ where
 
     fn _capture_group(&mut self, group_to_capture: GroupId<BS>) -> NumStones<BS> {
         let mut num_captured = NumStones::ZERO;
-        for pos in Pos::all_positions() {
-            if self.analysis.group_at(pos) == group_to_capture {
-                // This stone is part of the captured group, remove it from the board
-                self.board.set(pos, None);
-                num_captured += NumStones::ONE;
-            }
-        }
+        self.analysis.capture_group(group_to_capture, |pos| {
+            self.board.set(pos, None);
+            num_captured += NumStones::ONE;
+        });
+
+        debug_assert_eq!(self.analysis, Analysis::analyze(&self.board));
+
         num_captured
     }
 
@@ -124,6 +125,7 @@ where
 #[cfg(test)]
 mod tests {
     use crate::board::{BoardSize5x5, BoardSize13x13};
+    use pretty_assertions::assert_eq;
 
     use super::*;
 

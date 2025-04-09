@@ -1,10 +1,9 @@
 use crate::{BoardSize, board::Pos};
-#[cfg(test)]
 use derive_where::derive_where;
 
 use super::group_id::GroupId;
 
-#[cfg_attr(test, derive_where(PartialEq, Eq, Debug))]
+#[derive_where(PartialEq, Eq, Debug)]
 pub struct GroupedStones<BS: BoardSize>
 where
     [(); <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE]:,

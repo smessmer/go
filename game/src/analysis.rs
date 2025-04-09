@@ -8,13 +8,20 @@ use crate::{
 };
 
 #[derive_where(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct GroupInfo<BS: BoardSize> {
-    pub owner: Option<Player>,
-    pub liberties: NumStones<BS>,
+pub enum GroupInfo<BS: BoardSize> {
+    PlayerGroup {
+        owner: Player,
+        liberties: NumStones<BS>,
+    },
+    EmptyStonesGroup,
+    // TODO Unknown can only happen while building the analysis. Is there a better way to handle this?
+    Unknown {
+        liberties: NumStones<BS>,
+    },
 }
 
 /// Analyses a board position, determining groups, liberties, and other properties.
-#[cfg_attr(test, derive(Debug, PartialEq))]
+#[derive_where(Debug, PartialEq, Eq)]
 pub struct Analysis<BS: BoardSize>
 where
     [(); <BS as BoardSize>::SIZE * <BS as BoardSize>::SIZE]:,
@@ -35,19 +42,68 @@ where
     pub fn analyze(board: &Board<BS>) -> Self {
         let pos_to_group = group_connected_stones(board);
         let group_info = Self::_liberties_and_owners_of_groups(board, &pos_to_group);
+
         Self {
             pos_to_group,
             group_info,
         }
     }
 
-    /// Update group info, assuming group info may have changed but the positioning of groups hasn't changed,
-    /// i.e. it's still an isomorphic layout and each two stones that previously were in same/different groups
-    /// are still in same/different groups.
-    /// This can be called after prisoners have been captured for example but cannot be called if stones have been placed
-    /// because placing stones can change group isomorphy and will require a full update.
-    pub fn update_group_info(&mut self, board: &Board<BS>) {
-        self.group_info = Self::_liberties_and_owners_of_groups(board, &self.pos_to_group);
+    /// Remove a stone without splitting the group it belongs to.
+    ///
+    /// WARNING: This is only valid to call if the group is fully enclosed, i.e. doesn't connect to any other empty groups.
+    pub fn capture_group(
+        &mut self,
+        group_to_capture: GroupId<BS>,
+        mut on_remove: impl FnMut(Pos<BS>),
+    ) {
+        self.group_info[group_to_capture.into_usize()] = GroupInfo::EmptyStonesGroup;
+
+        for pos in Pos::all_positions() {
+            if self.pos_to_group.group_at(pos) == group_to_capture {
+                // Remove the stone
+                on_remove(pos);
+
+                // TODO Factor this out into a GroupSet or something
+                // TODO What smallset size? Or maybe just a bitset?
+                let mut groups_to_add_liberty_to = SmallSet::<[GroupId<BS>; 10]>::new();
+                // And give each neighboring stone a liberty
+                let mut add_liberty = |neighbor_pos: Option<Pos<BS>>| {
+                    if let Some(neighbor) = neighbor_pos {
+                        let neighbor_group = self.pos_to_group.group_at(neighbor);
+                        if neighbor_group != group_to_capture {
+                            match &mut self.group_info[neighbor_group.into_usize()] {
+                                GroupInfo::Unknown { .. } => {
+                                    panic!("Didn't expect an Unknown group after initialization");
+                                }
+                                GroupInfo::PlayerGroup { .. } => {
+                                    groups_to_add_liberty_to.insert(neighbor_group);
+                                }
+                                GroupInfo::EmptyStonesGroup => {
+                                    panic!(
+                                        "We captured a group that neighbors an empty group. Impossible."
+                                    );
+                                }
+                            }
+                        }
+                    }
+                };
+                add_liberty(pos.up());
+                add_liberty(pos.left());
+                add_liberty(pos.right());
+                add_liberty(pos.down());
+
+                for group in groups_to_add_liberty_to.iter() {
+                    match &mut self.group_info[group.into_usize()] {
+                        GroupInfo::Unknown { .. } => unreachable!(),
+                        GroupInfo::PlayerGroup { liberties, .. } => *liberties += NumStones::ONE,
+                        GroupInfo::EmptyStonesGroup => {
+                            unreachable!();
+                        }
+                    }
+                }
+            }
+        }
     }
 
     pub fn group_at(&self, pos: Pos<BS>) -> GroupId<BS> {
@@ -59,21 +115,37 @@ where
         pos_to_group: &GroupedStones<BS>,
     ) -> Vec<GroupInfo<BS>> {
         let mut liberties_and_owners = vec![
-            GroupInfo {
-                owner: None,
+            GroupInfo::Unknown {
                 liberties: NumStones::ZERO
             };
             pos_to_group.num_groups().into_usize()
         ];
 
         for pos in Pos::all_positions() {
-            if board.is_occupied(pos) {
+            if let Some(owner) = board[pos] {
                 // It's a filled cell. Remember the owner of this group
                 let group = pos_to_group.group_at(pos).into_usize();
-                if liberties_and_owners[group].owner.is_none() {
-                    liberties_and_owners[group].owner = board[pos];
+                match liberties_and_owners[group] {
+                    GroupInfo::EmptyStonesGroup => {
+                        liberties_and_owners[group] = GroupInfo::PlayerGroup {
+                            owner,
+                            liberties: NumStones::ZERO,
+                        };
+                    }
+                    GroupInfo::Unknown { liberties } => {
+                        liberties_and_owners[group] = GroupInfo::PlayerGroup { owner, liberties };
+                    }
+                    GroupInfo::PlayerGroup {
+                        owner: actual_owner,
+                        liberties: _liberties,
+                    } => {
+                        assert_eq!(owner, actual_owner);
+                    }
                 }
             } else {
+                let group = pos_to_group.group_at(pos).into_usize();
+                liberties_and_owners[group] = GroupInfo::EmptyStonesGroup;
+
                 // It's an empty cell. Any neighboring group that is occupied will get a liberty added.
                 // But we need to make sure we only add it once if two neighboring fields are from the same group.
                 // This code also adds liberties to the group representing the empty cells but that doesn't really matter.
@@ -92,10 +164,26 @@ where
                     groups_to_add_liberty_to.insert(pos_to_group.group_at(down));
                 }
                 for group_index in groups_to_add_liberty_to.iter() {
-                    liberties_and_owners[group_index.into_usize()].liberties += NumStones::ONE;
+                    match &mut liberties_and_owners[group_index.into_usize()] {
+                        GroupInfo::Unknown { liberties } => *liberties += NumStones::ONE,
+                        GroupInfo::PlayerGroup {
+                            owner: _owner,
+                            liberties,
+                        } => *liberties += NumStones::ONE,
+                        GroupInfo::EmptyStonesGroup => {
+                            // ignore, we don't care about the number of liberties of empty groups
+                        }
+                    }
                 }
             }
         }
+
+        debug_assert!(
+            !liberties_and_owners
+                .iter()
+                .any(|info| matches!(info, GroupInfo::Unknown { .. })),
+            "Analysis left an Unknown group behind"
+        );
 
         liberties_and_owners
     }
