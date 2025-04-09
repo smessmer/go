@@ -30,6 +30,7 @@ where
     /// Mapping from board position to which group it belongs to
     pos_to_group: GroupedStones<BS>,
 
+    // TODO pos_to_group stores the number of groups, which is also stored in group_info.len(). Can we remove it from pos_to_group?
     /// Some info for each group
     group_info: Vec<GroupInfo<BS>>,
 }
