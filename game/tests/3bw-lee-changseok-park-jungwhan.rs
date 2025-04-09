@@ -62,7 +62,10 @@ fn game_3bw_gokifu() {
     for (move_index, expected_board) in expected_boards.iter() {
         assert_eq!(
             expected_board,
-            sgf_game.game_after_move_index(*move_index).unwrap().board()
+            sgf_game
+                .game_position_after_num_moves(*move_index)
+                .unwrap()
+                .board()
         );
     }
 }

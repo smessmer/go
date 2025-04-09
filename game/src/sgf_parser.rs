@@ -11,7 +11,7 @@ pub struct SgfGame {
 }
 
 impl SgfGame {
-    pub fn game_after_move_index(&self, move_index: usize) -> Result<Game<BoardSize19x19>> {
+    pub fn game_position_after_num_moves(&self, move_index: usize) -> Result<Game<BoardSize19x19>> {
         let mut game = Game::new();
         let mut moves = self.moves.iter();
         for i in 0..move_index {
