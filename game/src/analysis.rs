@@ -59,6 +59,7 @@ where
     ) {
         self.group_info[group_to_capture.into_usize()] = GroupInfo::EmptyStonesGroup;
 
+        // TODO Would it be overall faster to keep a map of groups to positions around?
         for pos in Pos::all_positions() {
             if self.group_at(pos) == group_to_capture {
                 // Remove the stone
